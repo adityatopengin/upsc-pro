@@ -165,17 +165,32 @@
 
 <script>
     // --- 1. CONFIG & DATA ---
-    let config = JSON.parse(localStorage.getItem('upsc_quiz_config')) || { 
-        mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' 
-    };
+let config = JSON.parse(localStorage.getItem('upsc_quiz_config')) || { 
+    mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' 
+};
 
-    const questionData = [
-        { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
-        { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
-        { id: 103, type: 'passage', subject: 'CSAT', year: 2022, parentText: "Climate change is not just an environmental issue; it is a profound economic and social challenge. The disruption of weather patterns affects agriculture, which employs the majority of the workforce in developing nations. Therefore, climate adaptation is as crucial as mitigation.", text: "What is the central theme of the passage?", options: ["Environment vs Economy", "Importance of Mitigation", "Climate Adaptation's necessity", "Agricultural Reforms"], correct: 2, explanation: "The passage emphasizes adaptation due to agriculture impact." },
-        { id: 104, type: 'standard', subject: 'Economy', year: 2021, text: "The term 'West Texas Intermediate' is associated with:", options: ["Crude Oil", "Bullion", "Rare Earth Elements", "Uranium"], correct: 0, explanation: "WTI is a crude oil benchmark." },
-        { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
-    ];
+// Use DataManager (your demo questions will still work)
+const appData = window.appData || { saveResult: () => {} }; // Fallback if not loaded
+
+let state = {
+    quiz: [],  // Will be loaded dynamically
+    currentIdx: 0,
+    answers: {},
+    bookmarks: [],
+    eliminated: {},
+    startTime: null,
+    timerInterval: null,
+    timeSpent: {}
+};
+
+// Your existing 5 demo questions (KEEP THESE - renamed)
+const demoQuestions = [
+    { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
+    { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
+    { id: 103, type: 'passage', subject: 'CSAT', year: 2022, parentText: "Climate change is not just an environmental issue; it is a profound economic and social challenge. The disruption of weather patterns affects agriculture, which employs the majority of the workforce in developing nations. Therefore, climate adaptation is as crucial as mitigation.", text: "What is the central theme of the passage?", options: ["Environment vs Economy", "Importance of Mitigation", "Climate Adaptation's necessity", "Agricultural Reforms"], correct: 2, explanation: "The passage emphasizes adaptation due to agriculture impact." },
+    { id: 104, type: 'standard', subject: 'Economy', year: 2021, text: "The term 'West Texas Intermediate' is associated with:", options: ["Crude Oil", "Bullion", "Rare Earth Elements", "Uranium"], correct: 0, explanation: "WTI is a crude oil benchmark." },
+    { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
+];
 
     let state = {
         quiz: questionData, 
@@ -189,11 +204,22 @@
     };
 
     // --- 2. INITIALIZATION ---
-    document.addEventListener('DOMContentLoaded', () => {
-        state.startTime = new Date();
-        startTimer();
-        loadQuestion(0);
-    });
+    // Initialize with real data flow
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load questions (demo for now, JSON later)
+    state.quiz = demoQuestions.slice(0, config.count || 5);
+    
+    state.startTime = new Date();
+    startTimer();
+    loadQuestion(0);
+    
+    // Auto-save progress every 10 seconds
+    setInterval(() => {
+        localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
+    }, 10000);
+    
+    console.log("Quiz initialized with", state.quiz.length, "questions");
+});
 
     // --- 3. RENDER ENGINE ---
     function loadQuestion(idx) {
