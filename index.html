@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPSC Pro - Gamified Home</title>
+    <!-- CHANGE 1: APP NAME -->
+    <title>UPSC PRE PYQ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,6 +12,9 @@
     <link href="assets/css/style.css" rel="stylesheet">
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/DataManager.js"></script>
+    <style>
+        .q-count-btn.active { background-color: #1e293b; color: white; }
+    </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
 
@@ -19,10 +23,10 @@
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-slate-100 p-0.5 shadow-sm border border-slate-200 overflow-hidden">
                 <img src="assets/images/Omg.jpg" alt="Profile" class="w-full h-full object-cover">
- 
             </div>
             <div>
-                <h1 class="text-sm font-bold text-slate-900 leading-tight">Welcome, <span id="user-name">Aspirant</span></h1>
+                <!-- CHANGE 2: USER NAME -->
+                <h1 class="text-sm font-bold text-slate-900 leading-tight">Hello, <span id="user-name">Adimaanav</span></h1>
                 <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Target: CSE 2026</p>
             </div>
         </div>
@@ -37,19 +41,16 @@
     <!-- SCROLLABLE CONTENT -->
     <main class="flex-1 overflow-y-auto p-4 pb-24 space-y-6 scroll-smooth">
 
-        <!-- 1. MAIN PROGRESS CARD (Tabs for GS1 / CSAT) -->
+        <!-- 1. MAIN PROGRESS CARD -->
         <div class="glass-card rounded-3xl p-6 relative overflow-hidden group shadow-lg"> 
-            <!-- Background Decorations -->
             <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             
             <div class="relative z-10">
-                <!-- Tabs -->
                 <div class="flex space-x-6 border-b border-slate-200/60 mb-4">
-                    <button onclick="switchProgressTab('gs1')" id="tab-gs1" class="tab-active pb-2 text-sm transition-colors">GS Paper 1</button>
-                    <button onclick="switchProgressTab('csat')" id="tab-csat" class="tab-inactive pb-2 text-sm transition-colors hover:text-slate-600">CSAT Paper 2</button>
+                    <button onclick="switchTab('gs1')" id="tab-gs1" class="tab-active pb-2 text-sm transition-colors">GS Paper 1</button>
+                    <button onclick="switchTab('csat')" id="tab-csat" class="tab-inactive pb-2 text-sm transition-colors hover:text-slate-600">CSAT Paper 2</button>
                 </div>
 
-                <!-- Dynamic Content Area -->
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <span class="text-[10px] font-bold px-2 py-1 rounded mb-2 inline-block border transition-colors" id="phase-badge">Phase 1: Foundation</span>
@@ -62,11 +63,10 @@
                     </div>
                 </div>
 
-                <!-- Progress Bar -->
                 <div class="mt-4">
                     <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
-                        <span>Progress</span>
-                        <span id="progress-fraction">0 / 1000 Qs</span>
+                        <span>Overall Progress</span>
+                        <span id="progress-fraction">0 / 2000 Qs</span>
                     </div>
                     <div class="h-3 w-full bg-slate-100/80 rounded-full overflow-hidden border border-slate-200">
                         <div id="main-progress-bar" class="h-full progress-fill-gs1 rounded-full flex items-center justify-end pr-1" style="width: 0%"></div>
@@ -75,132 +75,52 @@
             </div>
         </div>
 
-        <!-- 2. SUBJECT RAID GRID (Continue Progress) -->
+        <!-- 2. SUBJECT RAID GRID (Dynamic) -->
         <div>
             <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-play-circle text-blue-600"></i> Continue Progress
             </h3>
             
+            <!-- This grid is now populated by JavaScript -->
             <div id="subject-grid" class="grid grid-cols-2 gap-3">
-                <!-- GS 1 Subjects -->
-                <div onclick="startSubject('Modern India')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="w-8 h-8 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center"><i class="fa-solid fa-landmark"></i></div>
-                        <span class="text-[10px] font-bold text-slate-400">GS 1</span>
-                    </div>
-                    <h4 class="font-bold text-sm text-slate-800">Modern India</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-orange-500" style="width: 45%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Ancient India')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-scroll"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800 truncate">Ancient India</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-amber-500" style="width: 25%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Medieval India')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-600 flex items-center justify-center"><i class="fa-solid fa-chess-rook"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800 truncate">Medieval India</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width: 15%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Art & Culture')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center"><i class="fa-solid fa-palette"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800 truncate">Art & Culture</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-rose-500" style="width: 10%"></div></div>
-                </div>
-
-                <div onclick="startSubject('World Geography')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-earth-americas"></i></div>
-                        <span class="text-[10px] font-bold text-slate-400">GS 1</span>
-                    </div>
-                    <h4 class="font-bold text-sm text-slate-800">World Geography</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width: 20%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Indian Geography')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-500 flex items-center justify-center"><i class="fa-solid fa-map-location-dot"></i></div>
-                        <span class="text-[10px] font-bold text-slate-400">GS 1</span>
-                    </div>
-                    <h4 class="font-bold text-sm text-slate-800">Indian Geography</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-cyan-500" style="width: 30%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Environment & Ecology')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center"><i class="fa-solid fa-leaf"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800 text-[11px]">Environment & Ecology</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: 40%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Indian Polity & Governance')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center"><i class="fa-solid fa-gavel"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800 text-[11px]">Polity & Governance</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-indigo-500" style="width: 50%"></div></div>
-                </div>
-
-                <div onclick="startSubject('International Relations')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-500 flex items-center justify-center"><i class="fa-solid fa-handshake"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800 text-[11px]">International Relations</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-teal-500" style="width: 10%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Indian Economy')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="w-8 h-8 rounded-lg bg-green-50 text-green-500 flex items-center justify-center"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                        <span class="text-[10px] font-bold text-slate-400">GS 1</span>
-                    </div>
-                    <h4 class="font-bold text-sm text-slate-800">Indian Economy</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-green-500" style="width: 35%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Science & Tech')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center"><i class="fa-solid fa-microchip"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800">Science & Tech</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-purple-500" style="width: 15%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Miscellaneous')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm" data-category="gs1">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center"><i class="fa-solid fa-layer-group"></i></div><span class="text-[10px] font-bold text-slate-400">GS 1</span></div>
-                    <h4 class="font-bold text-sm text-slate-800">Miscellaneous</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-gray-400" style="width: 5%"></div></div>
-                </div>
-
-                <!-- CSAT Subjects (Initially Hidden via JS) -->
-                <div onclick="startSubject('Maths')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-indigo-50" data-category="csat" style="display: none;">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-calculator"></i></div><span class="text-[10px] font-bold text-indigo-400">CSAT</span></div>
-                    <h4 class="font-bold text-sm text-slate-800">Maths</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-indigo-500" style="width: 55%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Reasoning')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-indigo-50" data-category="csat" style="display: none;">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-brain"></i></div><span class="text-[10px] font-bold text-indigo-400">CSAT</span></div>
-                    <h4 class="font-bold text-sm text-slate-800">Reasoning</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-indigo-500" style="width: 30%"></div></div>
-                </div>
-
-                <div onclick="startSubject('Passage')" class="subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-indigo-50 col-span-2" data-category="csat" style="display: none;">
-                    <div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-book-open"></i></div><span class="text-[10px] font-bold text-indigo-400">CSAT</span></div>
-                    <h4 class="font-bold text-sm text-slate-800">Reading Comprehension (Passages)</h4>
-                    <div class="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-indigo-500" style="width: 10%"></div></div>
-                </div>
+                <!-- Cards will be injected here -->
             </div>
         </div>
 
     </main>
 
-    <!-- AUTH MODAL (Login/Register) -->
-    <div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center pointer-events-none">
-        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm opacity-0 transition-opacity duration-300" id="auth-bg" onclick="closeAuthModal()"></div>
-        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto p-8 relative" id="auth-content">
-            <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6"></div>
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-fingerprint"></i></div>
-                <h2 class="text-2xl font-bold text-slate-900">One-Time Login</h2>
-                <p class="text-sm text-slate-500 mt-2">Log in once, and we'll auto-save your progress forever.</p>
+    <!-- NEW: TOPIC SELECTION MODAL (Moved from Quiz Selection) -->
+    <div id="topic-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center pointer-events-none">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-0 pointer-events-auto" id="topic-bg" onclick="closeModal()"></div>
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto flex flex-col max-h-[85vh]" id="topic-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <div>
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wide" id="m-subject-tag">GS1</span>
+                    <h2 class="text-xl font-bold text-slate-900 mt-1" id="m-subject-title">Polity</h2>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <button onclick="simulateLogin()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl mb-3 flex items-center justify-center gap-3 active:scale-[0.98] transition-transform">Continue with Google</button>
+            <div class="p-6 overflow-y-auto space-y-6">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Topic</label>
+                    <div class="space-y-2" id="m-subtopics"></div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Number of Questions</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="selectCount(10, this)" class="q-count-btn active bg-slate-900 text-white py-2 rounded-lg font-bold text-sm">10</button>
+                        <button onclick="selectCount(20, this)" class="q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">20</button>
+                        <button onclick="selectCount(50, this)" class="q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">50</button>
+                        <button onclick="selectCount(100, this)" class="q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">100</button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2" id="time-estimate"><i class="fa-regular fa-clock mr-1"></i> Est. Time: 12 mins</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100">
+                <button onclick="launchQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
+                    <span>Start Quiz</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -225,124 +145,183 @@
     </nav>
 
 <script>
-    // --- TAB SWITCHING LOGIC ---
-    // (We will update this dynamically based on real data)
-    let progressData = {
-        'gs1': { percent: '0%', fraction: '0 / 1000 Qs', badge: 'Phase 1: Foundation', attempts: 0, color: 'progress-fill-gs1', badgeColor: 'border-blue-200 bg-blue-50 text-blue-700' },
-        'csat': { percent: '0%', fraction: '0 / 500 Qs', badge: 'Phase 2: Core', attempts: 0, color: 'progress-fill-csat', badgeColor: 'border-amber-200 bg-amber-50 text-amber-700' }
+    // --- 1. DATA DEFINITIONS ---
+    const subjectsGS1 = [
+        { id: 'polity', name: 'Indian Polity', icon: 'fa-landmark', color: 'orange', topics: ['All Topics', 'Preamble', 'Fundamental Rights', 'Parliament', 'Judiciary'] },
+        { id: 'history_mod', name: 'Modern India', icon: 'fa-feather-pointed', color: 'yellow', topics: ['All Topics', '1857 Revolt', 'Gandhian Era', 'Social Reforms'] },
+        { id: 'history_anc', name: 'Ancient India', icon: 'fa-scroll', color: 'amber', topics: ['All Topics', 'Indus Valley', 'Vedic Age', 'Mauryan'] },
+        { id: 'history_med', name: 'Medieval India', icon: 'fa-chess-rook', color: 'amber', topics: ['All Topics', 'Delhi Sultanate', 'Mughals'] },
+        { id: 'art', name: 'Art & Culture', icon: 'fa-palette', color: 'rose', topics: ['All Topics', 'Architecture', 'Paintings', 'Dance'] },
+        { id: 'geo_world', name: 'World Geo', icon: 'fa-earth-americas', color: 'blue', topics: ['All Topics', 'Geomorphology', 'Climatology'] },
+        { id: 'geo_ind', name: 'Indian Geo', icon: 'fa-map-location-dot', color: 'cyan', topics: ['All Topics', 'Drainage System', 'Monsoon'] },
+        { id: 'env', name: 'Environment', icon: 'fa-leaf', color: 'emerald', topics: ['All Topics', 'Ecology', 'Biodiversity', 'Climate Change'] },
+        { id: 'econ', name: 'Indian Economy', icon: 'fa-indian-rupee-sign', color: 'green', topics: ['All Topics', 'Banking', 'Budget', 'Agriculture'] },
+        { id: 'sci', name: 'Science & Tech', icon: 'fa-microchip', color: 'purple', topics: ['All Topics', 'Space', 'Biotech', 'IT & Telecom'] },
+        { id: 'ir', name: 'IR', icon: 'fa-handshake', color: 'teal', topics: ['All Topics', 'Organizations', 'India & Neighbors'] },
+        { id: 'misc', name: 'Miscellaneous', icon: 'fa-layer-group', color: 'gray', topics: ['All Topics', 'Schemes', 'Awards'] }
+    ];
+
+    const subjectsCSAT = [
+        { id: 'math', name: 'Maths', icon: 'fa-calculator', color: 'indigo', topics: ['All Topics', 'Number System', 'Percentage'] },
+        { id: 'reasoning', name: 'Reasoning', icon: 'fa-brain', color: 'indigo', topics: ['All Topics', 'Coding-Decoding', 'Blood Relations'] },
+        { id: 'passage', name: 'Passages', icon: 'fa-book-open', color: 'indigo', topics: ['All Topics', 'Inference', 'Assumption'] }
+    ];
+
+    let state = {
+        currentTab: 'gs1',
+        selectedSubject: null,
+        selectedTopic: 'All Topics',
+        questionCount: 10,
+        history: [] // Will hold loaded history
     };
 
-    // Initialize Page
+    // --- 2. INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', async () => {
-        // --- NEW: FETCH REAL STATS FROM BRAIN ---
-        if (window.appData && window.appData.getStats) {
-            const stats = await window.appData.getStats();
-            
-            // Update the UI Data Object
-            progressData.gs1.attempts = stats.totalQuestions || 0;
-            // Simple logic: assume 1% progress for every 10 questions for now
-            const progress = Math.min(100, Math.round((stats.totalQuestions / 1000) * 100));
-            progressData.gs1.percent = progress + '%';
-            progressData.gs1.fraction = `${stats.totalQuestions} / 1000 Qs`;
+        // Load Real History
+        if (window.appData && window.appData.getLocalHistory) {
+            state.history = window.appData.getLocalHistory();
         }
         
-        // Render initial view
-        switchProgressTab('gs1');
+        // Initial Render
+        updateDashboardStats();
+        renderSubjectGrid('gs1');
     });
 
-    function switchProgressTab(tab) {
-        // 1. Update Buttons - Force Toggle Logic
-        if (tab === 'gs1') {
-            document.getElementById('tab-gs1').className = "tab-active pb-2 text-sm transition-colors cursor-default";
-            document.getElementById('tab-csat').className = "tab-inactive pb-2 text-sm transition-colors hover:text-slate-600 cursor-pointer";
-        } else {
-            document.getElementById('tab-csat').className = "tab-active border-b-3 border-amber-500 text-slate-900 font-extrabold pb-2 text-sm transition-colors cursor-default";
-            document.getElementById('tab-gs1').className = "tab-inactive pb-2 text-sm transition-colors hover:text-slate-600 cursor-pointer";
-        }
-
-        // 2. Update Content with Animation
-        const data = progressData[tab];
-        const bar = document.getElementById('main-progress-bar');
+    // --- 3. DYNAMIC RENDERING ---
+    function switchTab(tab) {
+        state.currentTab = tab;
         
-        document.getElementById('syllabus-percent').innerText = data.percent;
-        document.getElementById('progress-fraction').innerText = data.fraction;
-        document.getElementById('phase-badge').innerText = data.badge;
-        document.getElementById('phase-badge').className = `text-[10px] font-bold px-2 py-1 rounded mb-2 inline-block border transition-colors ${data.badgeColor}`;
-        document.getElementById('total-attempts').innerText = data.attempts;
+        // Update Buttons
+        document.getElementById('tab-gs1').className = tab === 'gs1' ? "tab-active pb-2 text-sm transition-colors cursor-default" : "tab-inactive pb-2 text-sm transition-colors hover:text-slate-600 cursor-pointer";
+        document.getElementById('tab-csat').className = tab === 'csat' ? "tab-active border-b-3 border-amber-500 text-slate-900 font-extrabold pb-2 text-sm transition-colors cursor-default" : "tab-inactive pb-2 text-sm transition-colors hover:text-slate-600 cursor-pointer";
+        
+        // Update Progress Bar Color
+        const bar = document.getElementById('main-progress-bar');
+        bar.className = `h-full rounded-full flex items-center justify-end pr-1 ${tab === 'gs1' ? 'progress-fill-gs1' : 'progress-fill-csat'}`;
+        
+        // Rerender Grid
+        renderSubjectGrid(tab);
+    }
 
-        bar.className = `h-full rounded-full flex items-center justify-end pr-1 ${data.color}`;
-        bar.style.width = data.percent;
+    function renderSubjectGrid(tab) {
+        const container = document.getElementById('subject-grid');
+        container.innerHTML = '';
+        
+        const data = tab === 'gs1' ? subjectsGS1 : subjectsCSAT;
+        
+        data.forEach((sub, index) => {
+            // Calculate REAL Progress
+            // Count how many questions of this subject are in history
+            // Note: We count attempt entries. (In a real DB, you'd count unique Q IDs)
+            // Assuming 500 questions available per subject for the visual bar
+            const attempts = state.history.filter(h => 
+                h.subject && h.subject.toLowerCase().includes(sub.name.split(' ')[0].toLowerCase())
+            ).reduce((acc, h) => acc + (h.total || 0), 0); // Sum up questions attempted in each session
+            
+            const totalAvailable = 500; // Hardcoded "Repository Size" per subject for visual
+            const percent = Math.min(100, Math.round((attempts / totalAvailable) * 100));
+            const barColor = sub.color || 'blue'; // Fallback color
 
-        // 3. Filter Subject Grid
-        const cards = document.querySelectorAll('.subject-card');
-        cards.forEach(card => {
-            card.style.display = card.getAttribute('data-category') === tab ? 'block' : 'none';
-            if (card.getAttribute('data-category') === tab) {
-                card.classList.add('grid-item-enter');
-                setTimeout(() => card.classList.remove('grid-item-enter'), 300);
-            }
+            const el = document.createElement('div');
+            // Adding Animation delay based on index
+            el.className = `subject-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer animate-fade-up`;
+            el.style.animationDelay = `${index * 50}ms`;
+            el.onclick = () => openTopicModal(sub); // Click opens modal directly
+
+            el.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="w-8 h-8 rounded-lg bg-${barColor}-50 text-${barColor}-500 flex items-center justify-center">
+                        <i class="fa-solid ${sub.icon}"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">${tab.toUpperCase()}</span>
+                </div>
+                <h4 class="font-bold text-sm text-slate-800 truncate">${sub.name}</h4>
+                <div class="mt-2 flex items-center gap-2">
+                    <div class="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-${barColor}-500" style="width: ${percent}%"></div>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-400">${attempts}/${totalAvailable}</span>
+                </div>
+            `;
+            container.appendChild(el);
         });
     }
 
-    // --- INTERACTION ---
-    function startSubject(subject) {
-        // 1. Show UI Feedback
-        const indicator = document.getElementById('auto-save-indicator');
-        indicator.innerHTML = `<i class="fa-solid fa-play text-blue-500 text-xs"></i><span class="text-[10px] font-bold text-blue-600">Starting ${subject}...</span>`;
-        indicator.classList.remove('opacity-0');
+    function updateDashboardStats() {
+        let totalQs = 0;
+        state.history.forEach(h => totalQs += (h.total || 0));
         
-        // 2. Save Preference for next page
-        // We assume GS1 for now unless it's a specific CSAT subject
-        const paper = subject === 'Maths' || subject === 'Reasoning' ? 'csat' : 'gs1';
+        document.getElementById('total-attempts').innerText = totalQs;
         
+        // Update main progress bar (assuming 5000 total questions in app)
+        const totalAppQs = 5000;
+        const mainPercent = Math.min(100, Math.round((totalQs / totalAppQs) * 100));
+        
+        document.getElementById('syllabus-percent').innerText = mainPercent + '%';
+        document.getElementById('progress-fraction').innerText = `${totalQs} / ${totalAppQs} Qs`;
+        document.getElementById('main-progress-bar').style.width = `${mainPercent}%`;
+    }
+
+    // --- 4. MODAL LOGIC (Copied & Adapted) ---
+    function openTopicModal(subject) {
+        state.selectedSubject = subject;
+        document.getElementById('m-subject-tag').innerText = state.currentTab.toUpperCase();
+        document.getElementById('m-subject-title').innerText = subject.name;
+        
+        const container = document.getElementById('m-subtopics'); 
+        container.innerHTML = '';
+        
+        subject.topics.forEach((topic, i) => {
+            container.innerHTML += `
+                <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <input type="radio" name="subtopic" value="${topic}" ${i===0?'checked':''} onchange="state.selectedTopic = this.value" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm font-medium text-slate-700">${topic}</span>
+                </label>`;
+        });
+        state.selectedTopic = subject.topics[0];
+        
+        const modal = document.getElementById('topic-modal'); 
+        modal.classList.remove('hidden'); 
+        void modal.offsetWidth; 
+        document.getElementById('topic-bg').classList.remove('opacity-0'); 
+        document.getElementById('topic-content').classList.remove('translate-y-full');
+    }
+
+    function closeModal() {
+        const bg = document.getElementById('topic-bg'); 
+        const content = document.getElementById('topic-content');
+        bg.classList.add('opacity-0'); 
+        content.classList.add('translate-y-full');
+        setTimeout(() => document.getElementById('topic-modal').classList.add('hidden'), 300);
+    }
+
+    function selectCount(n, btn) {
+        state.questionCount = n;
+        document.querySelectorAll('.q-count-btn').forEach(b => b.className = "q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition-all");
+        btn.className = "q-count-btn active bg-slate-900 text-white py-2 rounded-lg font-bold text-sm transition-all scale-105";
+        
+        const mins = state.currentTab === 'gs1' ? Math.round(n * 1.2) : Math.round(n * 1.5);
+        document.getElementById('time-estimate').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Est. Time: ${mins} mins`;
+    }
+
+    function launchQuiz() {
         const config = {
-            mode: 'test',
-            paper: paper,
-            subject: subject,
-            topic: 'All Topics',
-            count: 10 // Default
+            mode: 'test', // Default to test mode from dashboard
+            paper: state.currentTab,
+            subject: state.selectedSubject.name,
+            topic: state.selectedTopic,
+            count: state.questionCount,
+            timeLimit: state.currentTab === 'gs1' ? state.questionCount * 1.2 * 60 : state.questionCount * 1.5 * 60
         };
+        
         localStorage.setItem('upsc_quiz_config', JSON.stringify(config));
-
-        // 3. Redirect after short delay
-        setTimeout(() => {
-             window.location.href = 'quiz_selection.html';
-        }, 800);
-    }
-
-    // --- AUTH & AUTO-SAVE LOGIC ---
-    function openAuthModal() {
-        const modal = document.getElementById('auth-modal');
-        const bg = document.getElementById('auth-bg');
-        const content = document.getElementById('auth-content');
-        modal.classList.remove('hidden'); void modal.offsetWidth; 
-        bg.classList.remove('opacity-0'); content.classList.remove('translate-y-full');
-    }
-
-    function closeAuthModal() {
-        const modal = document.getElementById('auth-modal');
-        const bg = document.getElementById('auth-bg');
-        const content = document.getElementById('auth-content');
-        bg.classList.add('opacity-0'); content.classList.add('translate-y-full');
-        setTimeout(() => { modal.classList.add('hidden'); }, 300);
-    }
-
-    function simulateLogin() {
-        closeAuthModal();
-        document.getElementById('user-name').innerText = "Officer";
-        triggerAutoSave();
-    }
-
-    function triggerAutoSave() {
-        const indicator = document.getElementById('auto-save-indicator');
-        indicator.classList.remove('opacity-0');
-        setTimeout(() => {
-            indicator.classList.add('opacity-0');
-        }, 2000);
-        console.log("Auto-saved progress to cloud.");
+        
+        // Redirect directly to quiz engine
+        window.location.href = 'quiz_interface.html';
     }
 </script>
 </body>
 </html>
+
 
 
