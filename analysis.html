@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UPSC Pro - Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .review-card { transition: all 0.2s; border: 1px solid #f1f5f9; }
+        .review-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #e2e8f0; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        .animate-enter { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+<!-- Shared Logic & Styles -->
+<link href="assets/css/style.css" rel="stylesheet">
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/DataManager.js"></script>
+
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="h-16 flex-none bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30">
+        <button onclick="goHome()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-500 transition-colors">
+            <i class="fa-solid fa-house"></i>
+        </button>
+        <h1 class="text-lg font-bold text-slate-900">Performance Analysis</h1>
+        <button onclick="exportReport()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-50 text-blue-600 transition-colors" title="Download Report">
+            <i class="fa-solid fa-download"></i>
+        </button>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 pb-24 scroll-smooth space-y-6">
+
+        <!-- 1. BIG PICTURE (Scorecard) -->
+        <section class="animate-enter">
+            <div class="glass-panel p-6 rounded-3xl text-center relative overflow-hidden bg-white">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Quiz Result</h2>
+                
+                <div class="flex justify-center items-end gap-1 mb-2">
+                    <span class="text-5xl font-black text-slate-900" id="final-score">0</span>
+                    <span class="text-lg font-bold text-slate-400 mb-1">/ <span id="total-marks">20</span></span>
+                </div>
+                
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold mb-6">
+                    <i class="fa-solid fa-trophy"></i> Assessment Complete
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 border-t border-slate-100 pt-4">
+                    <div>
+                        <div class="text-2xl font-bold text-emerald-500" id="accuracy-text">0%</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Accuracy</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-500" id="total-time-taken">0s</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Total Time</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-slate-700" id="avg-time">0s</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Avg / Q</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CHARTS GRID -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-enter" style="animation-delay: 0.1s">
+            
+            <!-- Accuracy Wheel + Counts + Audio -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
+                
+                <!-- Chart -->
+                <div class="h-32 w-32 relative flex-none">
+                    <canvas id="accuracyChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="text-center">
+                            <span class="block text-lg font-black text-slate-800" id="center-total">10</span>
+                            <span class="text-[8px] font-bold text-slate-400 uppercase">Qs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Counts Legend -->
+                <div class="flex-1 space-y-2 min-w-[100px]">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-600 bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100">
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Correct</span>
+                        <span id="count-correct" class="text-emerald-700">0</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-600 bg-red-50 px-2 py-1.5 rounded-lg border border-red-100">
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span> Wrong</span>
+                        <span id="count-wrong" class="text-red-700">0</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200">
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-300"></span> Skipped</span>
+                        <span id="count-skipped" class="text-slate-500">0</span>
+                    </div>
+                </div>
+                
+                <!-- Feedback Button -->
+                <div class="flex-none flex flex-col items-center justify-center pl-2 sm:pl-4 border-l border-slate-100 h-full w-full sm:w-auto">
+                    <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-2xl mb-2 shadow-inner">
+                        <i class="fa-solid fa-medal text-blue-500"></i>
+                    </div>
+                    <button onclick="playFeedback()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-md whitespace-nowrap">
+                        <i class="fa-solid fa-volume-high"></i> Feedback
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subject Performance (Simple - No Comparison) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-blue-500"></i> Subject Breakdown</h3>
+                <div class="h-32 relative">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. REVIEW LIST -->
+        <section class="animate-enter" style="animation-delay: 0.2s">
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h3 class="font-bold text-slate-800 text-lg">Detailed Review</h3>
+                <div class="flex gap-2">
+                    <button onclick="filterReview('all')" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white transition-colors">All</button>
+                    <button onclick="filterReview('wrong')" class="filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors">Wrong</button>
+                </div>
+            </div>
+
+            <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 mb-4 flex items-center gap-3 text-xs text-orange-800" id="mistake-alert">
+                <i class="fa-solid fa-circle-check text-orange-500"></i>
+                <span>All incorrect answers have been automatically saved to your <b>Mistake Bank</b>.</span>
+            </div>
+
+            <div class="space-y-3" id="review-list">
+                <!-- Items injected here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
+        <button onclick="goHome()" class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-house text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Home</span>
+        </button>
+        <!-- ACTIVE TAB -->
+        <button class="text-blue-600 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Quiz</span>
+        </button>
+        <button class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-chart-pie text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Stats</span>
+        </button>
+        <button class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-gear text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Settings</span>
+        </button>
+    </nav>
+
+    <!-- DETAILED QUESTION MODAL -->
+    <div id="q-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center pointer-events-none">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-0 pointer-events-auto" id="modal-bg" onclick="closeModal()"></div>
+        <div class="bg-white w-full max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto flex flex-col max-h-[90vh]" id="modal-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <div><span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase" id="m-subject">Subject</span></div>
+                <button onclick="closeModal()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar">
+                <!-- Image Container (Clickable) -->
+                <div id="m-img-container" class="hidden cursor-zoom-in" onclick="openZoomModal()">
+                    <img id="m-image" src="" class="w-full h-48 object-cover rounded-xl border border-slate-200">
+                    <p class="text-xs text-center text-slate-400 mt-2"><i class="fa-solid fa-magnifying-glass-plus"></i> Tap to enlarge & add notes</p>
+                </div>
+
+                <p class="text-lg font-medium text-slate-900 font-serif" id="m-text"></p>
+                <div class="space-y-3" id="m-options"></div>
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+                    <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2"><i class="fa-solid fa-lightbulb mr-1"></i> Explanation</h4>
+                    <p class="text-sm text-emerald-900 opacity-90 leading-relaxed" id="m-exp"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ENLARGED IMAGE & NOTES MODAL -->
+    <div id="zoom-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/90 p-4 animate-enter">
+        <div class="w-full max-w-4xl h-full flex flex-col relative">
+            <button onclick="document.getElementById('zoom-modal').classList.add('hidden')" class="absolute top-4 right-4 text-white text-2xl z-50 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="flex-1 flex items-center justify-center overflow-hidden">
+                <img id="zoom-img-lg" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+            </div>
+            
+            <div class="mt-4 bg-white rounded-xl p-4 flex-none">
+                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">My Notes</label>
+                <textarea class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24" placeholder="Add observations about this image..."></textarea>
+                <div class="flex justify-end mt-2">
+                    <button onclick="alert('Notes Saved!')" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700">Save Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- MOCK DATA FOR TESTING (Used if no quiz taken recently) ---
+    const mockResult = {
+        score: 4.66,
+        totalMarks: 10,
+        quiz: [
+            { id: 101, subject: 'Polity', text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21.", userSel: 1 }, 
+            { id: 102, type: 'image', subject: 'Art & Culture', imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg', text: "Identify the architectural style of the temple shown:", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece.", userSel: 2 }, 
+            { id: 103, subject: 'Economy', text: "The term 'West Texas Intermediate' is associated with:", options: ["Crude Oil", "Bullion", "Rare Earth Elements", "Uranium"], correct: 0, explanation: "WTI is a crude oil benchmark.", userSel: undefined }, 
+            { id: 104, subject: 'Polity', text: "The Preamble to the Constitution of India is:", options: ["A part but no legal effect", "Not a part", "Part and has same legal effect", "Part but no independent legal effect"], correct: 3, explanation: "LIC of India Case (1995) + Kesavananda Bharati case.", userSel: 3 }, 
+            { id: 105, subject: 'Env', text: "Which one of the following is best description of 'Green Hydrogen'?", options: ["Hydrogen from Fossil Fuels", "Hydrogen from Nuclear", "Hydrogen from Renewables", "Hydrogen from Biomass"], correct: 2, explanation: "Produced by electrolysis of water using renewable energy.", userSel: 0 } 
+        ],
+        timeSpent: { 101: 45, 102: 60, 104: 30, 105: 50 } 
+    };
+
+    let currentData = mockResult; 
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        // In a real flow, we would read the result saved by the previous page
+        // const saved = localStorage.getItem('upsc_last_result');
+        // if (saved) currentData = JSON.parse(saved);
+        
+        // Ensure structure is valid
+        if (!currentData.quiz) currentData.quiz = []; 
+        
+        initAnalysis();
+        saveMistakesAutomatically();
+    });
+
+    function initAnalysis() {
+        let correct = 0, wrong = 0, skipped = 0;
+        let subjectStats = {}; 
+
+        currentData.quiz.forEach(q => {
+            if (!subjectStats[q.subject]) subjectStats[q.subject] = { total: 0, correct: 0 };
+            subjectStats[q.subject].total++;
+            if (q.userSel === undefined) skipped++;
+            else if (q.userSel === q.correct) { correct++; subjectStats[q.subject].correct++; }
+            else wrong++;
+        });
+
+        const accuracy = Math.round((correct / (correct + wrong || 1)) * 100);
+        const totalTimeSeconds = Object.values(currentData.timeSpent || {}).reduce((a,b)=>a+b, 0);
+        const avgTime = Math.round(totalTimeSeconds / (correct+wrong+skipped || 1));
+
+        const mins = Math.floor(totalTimeSeconds / 60);
+        const secs = totalTimeSeconds % 60;
+        const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+        document.getElementById('final-score').innerText = currentData.score;
+        document.getElementById('total-marks').innerText = (currentData.quiz.length * 2);
+        document.getElementById('accuracy-text').innerText = accuracy + '%';
+        document.getElementById('total-time-taken').innerText = timeStr; 
+        document.getElementById('avg-time').innerText = avgTime + 's';
+        document.getElementById('center-total').innerText = currentData.quiz.length;
+
+        document.getElementById('count-correct').innerText = correct;
+        document.getElementById('count-wrong').innerText = wrong;
+        document.getElementById('count-skipped').innerText = skipped;
+
+        renderAccuracyChart(correct, wrong, skipped);
+        renderSubjectChart(subjectStats);
+        renderReviewList('all');
+    }
+
+    function saveMistakesAutomatically() {
+        const mistakes = currentData.quiz.filter(q => q.userSel !== undefined && q.userSel !== q.correct);
+        if (mistakes.length === 0) { document.getElementById('mistake-alert').classList.add('hidden'); return; }
+        // Simulate saving to database/localstorage
+        let savedMistakes = JSON.parse(localStorage.getItem('upsc_mistakes') || '[]');
+        mistakes.forEach(m => { if (!savedMistakes.some(sm => sm.id === m.id)) savedMistakes.push(m); });
+        localStorage.setItem('upsc_mistakes', JSON.stringify(savedMistakes));
+    }
+
+    function renderAccuracyChart(c, w, s) {
+        const ctx = document.getElementById('accuracyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Correct', 'Wrong', 'Skipped'],
+                datasets: [{ data: [c, w, s], backgroundColor: ['#10b981', '#ef4444', '#cbd5e1'], borderWidth: 0, hoverOffset: 4 }]
+            },
+            options: { cutout: '70%', plugins: { legend: { display: false } } }
+        });
+    }
+
+    function renderSubjectChart(stats) {
+        const labels = Object.keys(stats);
+        const userScores = labels.map(sub => Math.round((stats[sub].correct / stats[sub].total) * 100));
+        const ctx = document.getElementById('subjectChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Score', data: userScores, backgroundColor: '#3b82f6', borderRadius: 4, barPercentage: 0.6 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, max: 100, grid: { display: false }, ticks: { display: false } }, x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Plus Jakarta Sans' } } } }
+            }
+        });
+    }
+
+    function renderReviewList(filter) {
+        const list = document.getElementById('review-list');
+        list.innerHTML = '';
+        let filteredQs = currentData.quiz;
+        if (filter === 'wrong') filteredQs = currentData.quiz.filter(q => q.userSel !== undefined && q.userSel !== q.correct);
+
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            if (b.innerText.toLowerCase() === filter) b.className = "filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white transition-colors";
+            else b.className = "filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors";
+        });
+
+        filteredQs.forEach((q, i) => {
+            let status = q.userSel === undefined ? 'Skipped' : (q.userSel === q.correct ? 'Correct' : 'Wrong');
+            let colorClass = status === 'Correct' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : (status === 'Wrong' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-50 border-slate-200 text-slate-500');
+            const timeTaken = currentData.timeSpent ? (currentData.timeSpent[q.id] || 0) : 0;
+            
+            list.innerHTML += `
+                <div onclick="openModal(${q.id})" class="review-card p-4 rounded-xl border bg-white cursor-pointer relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${colorClass}">${status}</span>
+                            <span class="text-xs font-bold text-slate-400 uppercase">${q.subject}</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${timeTaken}s</span>
+                    </div>
+                    <p class="text-sm font-medium text-slate-800 line-clamp-2">${q.text}</p>
+                </div>
+            `;
+        });
+    }
+
+    function filterReview(type) { renderReviewList(type); }
+
+    function openModal(qId) {
+        const q = currentData.quiz.find(item => item.id === qId);
+        if(!q) return;
+        document.getElementById('m-subject').innerText = q.subject;
+        document.getElementById('m-text').innerText = q.text;
+        document.getElementById('m-exp').innerText = q.explanation;
+        
+        // Image Handling
+        const imgBox = document.getElementById('m-img-container');
+        if (q.type === 'image' && q.imgUrl) {
+            imgBox.classList.remove('hidden');
+            document.getElementById('m-image').src = q.imgUrl;
+            document.getElementById('zoom-img-lg').src = q.imgUrl;
+        } else {
+            imgBox.classList.add('hidden');
+        }
+
+        const optContainer = document.getElementById('m-options'); optContainer.innerHTML = '';
+        q.options.forEach((opt, i) => {
+            let style = "p-4 rounded-xl border border-slate-200 text-slate-600";
+            let icon = "";
+            if (i === q.correct) { style = "p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 text-emerald-800 font-bold"; icon = '<i class="fa-solid fa-check float-right mt-1"></i>'; }
+            else if (i === q.userSel) { style = "p-4 rounded-xl border-2 border-red-200 bg-red-50 text-red-800 font-bold"; icon = '<i class="fa-solid fa-xmark float-right mt-1"></i>'; }
+            optContainer.innerHTML += `<div class="${style} text-sm">${opt} ${icon}</div>`;
+        });
+        const modal = document.getElementById('q-modal'); modal.classList.remove('hidden'); void modal.offsetWidth; document.getElementById('modal-bg').classList.remove('opacity-0'); document.getElementById('modal-content').classList.remove('translate-y-full');
+    }
+
+    function closeModal() {
+        const bg = document.getElementById('modal-bg'); const content = document.getElementById('modal-content');
+        bg.classList.add('opacity-0'); content.classList.add('translate-y-full');
+        setTimeout(() => document.getElementById('q-modal').classList.add('hidden'), 300);
+    }
+
+    function openZoomModal() {
+        document.getElementById('zoom-modal').classList.remove('hidden');
+    }
+
+    function playFeedback() {
+        const score = parseFloat(document.getElementById('final-score').innerText);
+        const msg = score > 5 ? "Excellent work! Keep it up." : "Don't give up. Review your mistakes.";
+        const utterance = new SpeechSynthesisUtterance(msg);
+        utterance.rate = 1;
+        window.speechSynthesis.speak(utterance);
+        // Simple UI feedback
+        const btn = event.currentTarget;
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-volume-high animate-pulse"></i> Playing...';
+        setTimeout(() => btn.innerHTML = original, 2000);
+    }
+
+    function goHome() { 
+        alert("Navigating to Home...");
+        // In real app: window.location.href = 'index.html'; 
+    }
+    
+    function exportReport() { alert("Generating PDF Report..."); }
+</script>
+</body>
+</html>

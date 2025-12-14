@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UPSC Pro - Quiz Selection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        
+        /* Tab Styling */
+        .tab-btn { transition: all 0.2s; border-bottom: 3px solid transparent; color: #64748b; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #1e293b; font-weight: 700; }
+        
+        /* Cards */
+        .mode-card { transition: all 0.2s; border: 2px solid #e2e8f0; }
+        .mode-card:hover { border-color: #cbd5e1; }
+        .mode-card.active { border-color: #3b82f6; background-color: #eff6ff; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1); }
+        .mode-card.active i { color: #2563eb; }
+        
+        .subject-card { transition: all 0.2s; }
+        .subject-card:active { transform: scale(0.96); }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    </style>
+<!-- Shared Logic & Styles -->
+<link href="assets/css/style.css" rel="stylesheet">
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/DataManager.js"></script>
+
+</head>
+<body class="bg-slate-50 h-screen flex flex-col text-slate-800 overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="h-16 flex-none bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30">
+        <button onclick="goHome()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <h1 class="text-lg font-bold text-slate-900">New Session</h1>
+        <div class="w-10"></div> <!-- Spacer -->
+    </header>
+
+    <!-- CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 pb-24 max-w-2xl mx-auto w-full space-y-8 scroll-smooth">
+
+        <!-- 1. MODE SELECTION -->
+        <section>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 px-1">Select Mode</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div onclick="selectMode('learning')" id="mode-learning" class="mode-card bg-white p-4 rounded-2xl cursor-pointer relative overflow-hidden group">
+                    <i class="fa-solid fa-book-open-reader text-2xl text-slate-300 mb-2 transition-colors"></i>
+                    <h3 class="font-bold text-sm text-slate-700">Learning</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Instant Answers</p>
+                </div>
+                <div onclick="selectMode('test')" id="mode-test" class="mode-card active bg-white p-4 rounded-2xl cursor-pointer relative overflow-hidden group">
+                    <i class="fa-solid fa-stopwatch text-2xl text-slate-300 mb-2 transition-colors"></i>
+                    <h3 class="font-bold text-sm text-slate-700">Test Mode</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Timer & Negative Marking</p>
+                    <div class="absolute top-2 right-2 text-blue-600 text-xs"><i class="fa-solid fa-circle-check"></i></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PAPER SELECTION (Tabs) -->
+        <section>
+            <div class="flex border-b border-slate-200 mb-6">
+                <button onclick="selectPaper('gs1')" id="tab-gs1" class="tab-btn active flex-1 pb-3 text-sm font-medium">GS Paper 1</button>
+                <button onclick="selectPaper('csat')" id="tab-csat" class="tab-btn flex-1 pb-3 text-sm font-medium">CSAT Paper 2</button>
+            </div>
+
+            <!-- GS1 Content -->
+            <div id="content-gs1" class="space-y-6 fade-in">
+                <!-- Info Banner -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-sm"></i>
+                    <div class="text-xs text-blue-800">
+                        <span class="font-bold block mb-0.5">GS1 Scoring Rules</span>
+                        +2 Marks • -0.66 Negative • 2 Hours (100 Qs)
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 px-1">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <button onclick="openMockModal('gs1')" class="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-4 rounded-xl text-left shadow-lg shadow-blue-200 transition-all active:scale-98 group col-span-2 flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-sm">Attempt Mock</div>
+                                <div class="text-[10px] opacity-80">Full Syllabus • Exam Simulation</div>
+                            </div>
+                            <i class="fa-solid fa-play-circle text-2xl opacity-90"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="startQuickQuiz('random')" class="bg-white border border-slate-200 p-4 rounded-xl text-left hover:border-blue-300 transition-all active:scale-98 group">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2"><i class="fa-solid fa-shuffle"></i></div>
+                            <div class="font-bold text-sm text-slate-700">Random 10</div>
+                            <div class="text-[10px] text-slate-400">Quick Practice</div>
+                        </button>
+                        <button onclick="startQuickQuiz('mistakes')" class="bg-white border border-slate-200 p-4 rounded-xl text-left hover:border-red-300 transition-all active:scale-98 group">
+                            <div class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center mb-2"><i class="fa-solid fa-rotate-left"></i></div>
+                            <div class="font-bold text-sm text-slate-700">Mistakes</div>
+                            <div class="text-[10px] text-slate-400">Re-attempt Wrong</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject Grid -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 px-1">Subjects</h3>
+                    <div class="grid grid-cols-2 gap-3" id="gs1-subjects">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSAT Content (Hidden initially) -->
+            <div id="content-csat" class="hidden space-y-6 fade-in">
+                <!-- Info Banner -->
+                <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 text-sm"></i>
+                    <div class="text-xs text-amber-900">
+                        <span class="font-bold block mb-0.5">CSAT Scoring Rules</span>
+                        +2.5 Marks • -0.83 Negative • 2 Hours (80 Qs)
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 px-1">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <button onclick="openMockModal('csat')" class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-4 rounded-xl text-left shadow-lg shadow-orange-200 transition-all active:scale-98 group col-span-2 flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-sm">Attempt Mock</div>
+                                <div class="text-[10px] opacity-80">Full Syllabus • Exam Simulation</div>
+                            </div>
+                            <i class="fa-solid fa-play-circle text-2xl opacity-90"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="startQuickQuiz('random_csat')" class="bg-white border border-slate-200 p-4 rounded-xl text-left hover:border-amber-300 transition-all active:scale-98">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-2"><i class="fa-solid fa-shuffle"></i></div>
+                            <div class="font-bold text-sm text-slate-700">Random 10</div>
+                            <div class="text-[10px] text-slate-400">Quick Practice</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject Grid -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 px-1">Sections</h3>
+                    <div class="grid grid-cols-2 gap-3" id="csat-subjects">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOCK SELECTION MODAL -->
+    <div id="mock-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Choose Test Length</h2>
+                    <p class="text-xs text-slate-500 mt-0.5" id="mock-subtitle">GS Paper 1</p>
+                </div>
+                <button onclick="closeModal('mock-modal')" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <!-- Half Length -->
+                <button onclick="startMock('half')" class="w-full text-left p-4 rounded-xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-800 group-hover:text-blue-700">Half Length Test</span>
+                        <span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded">1 Hour</span>
+                    </div>
+                    <p class="text-xs text-slate-500 group-hover:text-blue-600/80" id="half-desc">50 Questions • 100 Marks</p>
+                </button>
+
+                <!-- Full Length -->
+                <button onclick="startMock('full')" class="w-full text-left p-4 rounded-xl border-2 border-slate-100 hover:border-purple-500 hover:bg-purple-50 transition-all group">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-800 group-hover:text-purple-700">Full Length Test</span>
+                        <span class="bg-purple-100 text-purple-600 text-[10px] font-bold px-2 py-0.5 rounded">2 Hours</span>
+                    </div>
+                    <p class="text-xs text-slate-500 group-hover:text-purple-600/80" id="full-desc">100 Questions • 200 Marks</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUB-TOPIC MODAL -->
+    <div id="topic-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center pointer-events-none">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-0 pointer-events-auto" id="topic-bg" onclick="closeModal('topic-modal')"></div>
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto flex flex-col max-h-[85vh]" id="topic-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <div><span class="text-xs font-bold text-blue-600 uppercase tracking-wide" id="m-subject-tag">GS1</span><h2 class="text-xl font-bold text-slate-900 mt-1" id="m-subject-title">Polity</h2></div>
+                <button onclick="closeModal('topic-modal')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6">
+                <div><label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Topic</label><div class="space-y-2" id="m-subtopics"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Number of Questions</label><div class="grid grid-cols-4 gap-2"><button onclick="selectCount(10, this)" class="q-count-btn active bg-slate-900 text-white py-2 rounded-lg font-bold text-sm">10</button><button onclick="selectCount(20, this)" class="q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">20</button><button onclick="selectCount(50, this)" class="q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">50</button><button onclick="selectCount(100, this)" class="q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">100</button></div><p class="text-[10px] text-slate-400 mt-2" id="time-estimate"><i class="fa-regular fa-clock mr-1"></i> Est. Time: 12 mins</p></div>
+            </div>
+            <div class="p-4 border-t border-slate-100"><button onclick="launchQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform flex justify-center items-center gap-2"><span>Start Quiz</span> <i class="fa-solid fa-arrow-right"></i></button></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
+        <button onclick="goHome()" class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-house text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Home</span>
+        </button>
+        <button class="text-blue-600 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Quiz</span>
+        </button>
+        <button class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-chart-pie text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Stats</span>
+        </button>
+        <button class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-gear text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Settings</span>
+        </button>
+    </nav>
+
+<script>
+    // --- DATA ---
+    const subjectsGS1 = [
+        { id: 'polity', name: 'Indian Polity', icon: 'fa-landmark', color: 'orange', topics: ['All Topics', 'Preamble', 'Fundamental Rights', 'Parliament', 'Judiciary', 'Local Govt'] },
+        { id: 'history_mod', name: 'Modern India', icon: 'fa-feather-pointed', color: 'yellow', topics: ['All Topics', '1857 Revolt', 'Gandhian Era', 'Social Reforms', 'Governor Generals'] },
+        { id: 'history_anc', name: 'Ancient India', icon: 'fa-scroll', color: 'amber', topics: ['All Topics', 'Indus Valley', 'Vedic Age', 'Mauryan', 'Gupta'] },
+        { id: 'history_med', name: 'Medieval India', icon: 'fa-chess-rook', color: 'amber', topics: ['All Topics', 'Delhi Sultanate', 'Mughals', 'Vijayanagar'] },
+        { id: 'art', name: 'Art & Culture', icon: 'fa-palette', color: 'rose', topics: ['All Topics', 'Architecture', 'Paintings', 'Dance & Music', 'Literature'] },
+        { id: 'geo_world', name: 'World Geo', icon: 'fa-earth-americas', color: 'blue', topics: ['All Topics', 'Geomorphology', 'Climatology', 'Oceanography'] },
+        { id: 'geo_ind', name: 'Indian Geo', icon: 'fa-map-location-dot', color: 'cyan', topics: ['All Topics', 'Drainage System', 'Monsoon', 'Agriculture', 'Minerals'] },
+        { id: 'env', name: 'Environment', icon: 'fa-leaf', color: 'emerald', topics: ['All Topics', 'Ecology', 'Biodiversity', 'Climate Change', 'Acts & Policies'] },
+        { id: 'econ', name: 'Indian Economy', icon: 'fa-indian-rupee-sign', color: 'green', topics: ['All Topics', 'Banking', 'Budget', 'Agriculture', 'External Sector'] },
+        { id: 'sci', name: 'Science & Tech', icon: 'fa-microchip', color: 'purple', topics: ['All Topics', 'Space', 'Biotech', 'IT & Telecom', 'Defense'] },
+        { id: 'ir', name: 'IR', icon: 'fa-handshake', color: 'teal', topics: ['All Topics', 'Organizations', 'India & Neighbors', 'Bilateral Relations'] },
+        { id: 'misc', name: 'Miscellaneous', icon: 'fa-layer-group', color: 'gray', topics: ['All Topics', 'Schemes', 'Awards', 'Sports'] }
+    ];
+
+    const subjectsCSAT = [
+        { id: 'math', name: 'Maths', icon: 'fa-calculator', color: 'indigo', topics: ['All Topics', 'Number System', 'Percentage', 'Time & Work', 'Permutation'] },
+        { id: 'reasoning', name: 'Reasoning', icon: 'fa-brain', color: 'indigo', topics: ['All Topics', 'Coding-Decoding', 'Blood Relations', 'Syllogism'] },
+        { id: 'passage', name: 'Passages', icon: 'fa-book-open', color: 'indigo', topics: ['All Topics', 'Inference', 'Assumption', 'Conclusion'] }
+    ];
+
+    let state = {
+        mode: 'test', paper: 'gs1', selectedSubject: null, selectedTopic: 'All Topics', questionCount: 10
+    };
+
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+        renderSubjects('gs1', subjectsGS1);
+        renderSubjects('csat', subjectsCSAT);
+    });
+
+    // --- RENDER LOGIC ---
+    function renderSubjects(containerId, data) {
+        const container = document.getElementById(containerId === 'gs1' ? 'gs1-subjects' : 'csat-subjects');
+        data.forEach(sub => {
+            const el = document.createElement('div');
+            el.className = `subject-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden cursor-pointer hover:border-${sub.color}-300 transition-all active:scale-95 group`;
+            el.onclick = () => openTopicModal(sub);
+            el.innerHTML = `<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-${sub.color}-50 text-${sub.color}-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform"><i class="fa-solid ${sub.icon}"></i></div><span class="font-bold text-sm text-slate-700">${sub.name}</span></div>`;
+            container.appendChild(el);
+        });
+    }
+
+    // --- SELECTION LOGIC ---
+    function selectMode(mode) {
+        state.mode = mode;
+        const els = { 'learning': document.getElementById('mode-learning'), 'test': document.getElementById('mode-test') };
+        Object.values(els).forEach(el => { el.className = "mode-card bg-white p-4 rounded-2xl cursor-pointer relative overflow-hidden group"; el.querySelector('i').className = `fa-solid ${el.id.includes('test')?'fa-stopwatch':'fa-book-open-reader'} text-2xl text-slate-300 mb-2 transition-colors`; if(el.querySelector('.absolute')) el.querySelector('.absolute').remove(); });
+        const active = els[mode]; active.classList.add('active'); active.querySelector('i').classList.replace('text-slate-300', 'text-blue-600'); active.innerHTML += `<div class="absolute top-2 right-2 text-blue-600 text-xs fade-in"><i class="fa-solid fa-circle-check"></i></div>`;
+    }
+
+    function selectPaper(paper) {
+        state.paper = paper;
+        document.getElementById('tab-gs1').className = `tab-btn flex-1 pb-3 text-sm font-medium ${paper==='gs1'?'active':''}`;
+        document.getElementById('tab-csat').className = `tab-btn flex-1 pb-3 text-sm font-medium ${paper==='csat'?'active':''}`;
+        document.getElementById('content-gs1').classList.toggle('hidden', paper !== 'gs1');
+        document.getElementById('content-csat').classList.toggle('hidden', paper !== 'csat');
+    }
+
+    // --- MOCK MODAL LOGIC ---
+    function openMockModal(paper) {
+        state.paper = paper;
+        const modal = document.getElementById('mock-modal');
+        document.getElementById('mock-subtitle').innerText = paper === 'gs1' ? 'GS Paper 1' : 'CSAT Paper 2';
+        
+        // Update descriptions based on paper
+        if(paper === 'gs1') {
+            document.getElementById('half-desc').innerText = "50 Questions • 100 Marks";
+            document.getElementById('full-desc').innerText = "100 Questions • 200 Marks";
+        } else {
+            document.getElementById('half-desc').innerText = "40 Questions • 100 Marks";
+            document.getElementById('full-desc').innerText = "80 Questions • 200 Marks";
+        }
+        modal.classList.remove('hidden');
+    }
+
+    function startMock(length) {
+        let count = 0;
+        let time = 0;
+        
+        if (state.paper === 'gs1') {
+            count = length === 'half' ? 50 : 100;
+            time = length === 'half' ? 60 : 120;
+        } else {
+            count = length === 'half' ? 40 : 80;
+            time = length === 'half' ? 60 : 120;
+        }
+
+        const config = {
+            mode: state.mode,
+            paper: state.paper,
+            subject: 'Mock Test',
+            topic: length === 'half' ? 'Half Length' : 'Full Length',
+            count: count,
+            timeLimit: time * 60
+        };
+        launchQuiz(config);
+    }
+
+    // --- TOPIC MODAL LOGIC ---
+    function openTopicModal(subject) {
+        state.selectedSubject = subject;
+        document.getElementById('m-subject-tag').innerText = state.paper.toUpperCase();
+        document.getElementById('m-subject-title').innerText = subject.name;
+        const container = document.getElementById('m-subtopics'); container.innerHTML = '';
+        subject.topics.forEach((topic, i) => {
+            container.innerHTML += `<label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors"><input type="radio" name="subtopic" value="${topic}" ${i===0?'checked':''} onchange="state.selectedTopic = this.value" class="w-4 h-4 text-blue-600 focus:ring-blue-500"><span class="text-sm font-medium text-slate-700">${topic}</span></label>`;
+        });
+        state.selectedTopic = subject.topics[0];
+        const modal = document.getElementById('topic-modal'); modal.classList.remove('hidden'); void modal.offsetWidth; document.getElementById('topic-bg').classList.remove('opacity-0'); document.getElementById('topic-content').classList.remove('translate-y-full');
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if(id === 'mock-modal') { modal.classList.add('hidden'); return; } // Instant close for simple modal
+        const bg = document.getElementById('topic-bg'); const content = document.getElementById('topic-content');
+        bg.classList.add('opacity-0'); content.classList.add('translate-y-full'); setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function selectCount(n, btn) {
+        state.questionCount = n;
+        document.querySelectorAll('.q-count-btn').forEach(b => b.className = "q-count-btn bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition-all");
+        btn.className = "q-count-btn active bg-slate-900 text-white py-2 rounded-lg font-bold text-sm transition-all scale-105";
+        const mins = state.paper === 'gs1' ? Math.round(n * 1.2) : Math.round(n * 1.5);
+        document.getElementById('time-estimate').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Est. Time: ${mins} mins`;
+    }
+
+    function startQuickQuiz(type) {
+        // Logic for "Random 10" or "Mistakes"
+        const config = {
+            mode: state.mode,
+            paper: state.paper,
+            subject: type === 'mistakes' ? 'Mistake Review' : 'Mixed Bag',
+            topic: type === 'mistakes' ? 'Previously Wrong' : 'Random Selection',
+            count: 10,
+            timeLimit: state.paper === 'gs1' ? 12*60 : 15*60
+        };
+        launchQuiz(config);
+    }
+
+    function launchQuiz(config = null) {
+        if (!config) {
+            config = {
+                mode: state.mode, paper: state.paper, subject: state.selectedSubject.name, topic: state.selectedTopic, count: state.questionCount,
+                timeLimit: state.paper === 'gs1' ? state.questionCount * 1.2 * 60 : state.questionCount * 1.5 * 60
+            };
+        }
+        localStorage.setItem('upsc_quiz_config', JSON.stringify(config));
+        alert(`Starting Quiz:\nMode: ${config.mode.toUpperCase()}\nPaper: ${config.paper.toUpperCase()}\nType: ${config.subject} (${config.topic})\nQs: ${config.count}\nTime: ${config.timeLimit/60} mins`);
+    }
+
+    function goHome() { 
+        alert("Navigating to Home...");
+        // In integrated app: window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>

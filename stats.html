@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UPSC Pro - Overall Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:active { transform: scale(0.98); }
+        
+        /* Expansion Animation */
+        .expand-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .expanded { max-height: 500px; transition: max-height 0.5s ease-in; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+<!-- Shared Logic & Styles -->
+<link href="assets/css/style.css" rel="stylesheet">
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/DataManager.js"></script>
+
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="h-16 flex-none bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30">
+        <button onclick="goHome()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-500 transition-colors">
+            <i class="fa-solid fa-house"></i>
+        </button>
+        <h1 class="text-lg font-bold text-slate-900">Cumulative Report</h1>
+        <div class="w-10"></div> <!-- Spacer -->
+    </header>
+
+    <!-- CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 pb-24 scroll-smooth space-y-6">
+
+        <!-- 1. AGGREGATE SUMMARY -->
+        <section class="animate-fade-up" style="animation-delay: 0ms;">
+            <div class="glass-card p-6 rounded-3xl relative overflow-hidden bg-white">
+                <!-- Background decoration -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-8 -mt-8"></div>
+                
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Lifetime Statistics</h2>
+                
+                <div class="flex flex-col mb-6">
+                    <div class="flex items-end gap-2">
+                        <span class="text-5xl font-black text-slate-900" id="total-accuracy">68%</span>
+                        <span class="text-sm font-bold text-emerald-600 mb-2 flex items-center"><i class="fa-solid fa-arrow-trend-up mr-1"></i> +2.4%</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-500 mt-1">Overall Accuracy</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div class="text-2xl font-black text-slate-800" id="total-qs">1,240</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Questions Attempted</div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div class="text-2xl font-black text-blue-600" id="study-hours">14h</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Study Time</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SWOT ANALYSIS -->
+        <section class="animate-fade-up" style="animation-delay: 100ms;">
+            <h3 class="font-bold text-slate-800 mb-3 px-1 text-sm uppercase tracking-wide">Areas of Focus</h3>
+            
+            <div class="space-y-3">
+                <!-- Strength -->
+                <div class="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-none text-lg"><i class="fa-solid fa-dumbbell"></i></div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-slate-800">Strengths (> 65%)</h4>
+                        <p class="text-xs text-slate-500 mt-1" id="list-strength">Polity, Modern History</p>
+                    </div>
+                </div>
+
+                <!-- Moderate -->
+                <div class="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center flex-none text-lg"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-slate-800">Moderate (40-65%)</h4>
+                        <p class="text-xs text-slate-500 mt-1" id="list-moderate">Geography, Environment</p>
+                    </div>
+                </div>
+
+                <!-- Weakness -->
+                <div class="bg-white p-4 rounded-xl border border-red-100 shadow-sm flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center flex-none text-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-slate-800">Weaknesses (< 40%)</h4>
+                        <p class="text-xs text-slate-500 mt-1" id="list-weak">Economics, Science & Tech</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. PROGRESS TREND CHART -->
+        <section class="animate-fade-up" style="animation-delay: 200ms;">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Consistency Trend</h3>
+                    <select class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded border-none outline-none">
+                        <option>Last 10 Tests</option>
+                        <option>Last 30 Days</option>
+                    </select>
+                </div>
+                <div class="h-48 w-full">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. SUBJECT DEEP DIVE -->
+        <section class="animate-fade-up" style="animation-delay: 300ms;">
+            <h3 class="font-bold text-slate-800 mb-3 px-1 text-sm uppercase tracking-wide">Subject Performance</h3>
+            <div class="space-y-3" id="subject-list">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
+        <button onclick="goHome()" class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-house text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Home</span>
+        </button>
+        <button class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-pen-nib text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Quiz</span>
+        </button>
+        <!-- ACTIVE TAB -->
+        <button class="text-blue-600 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Stats</span>
+        </button>
+        <button class="text-slate-400 flex flex-col items-center w-16 group active:scale-95 transition-transform">
+            <i class="fa-solid fa-gear text-lg mb-1 group-hover:text-blue-500 transition-colors"></i>
+            <span class="text-[10px] font-medium group-hover:text-blue-500 transition-colors">Settings</span>
+        </button>
+    </nav>
+
+<script>
+    // --- 1. MOCK AGGREGATE DATA ---
+    const aggregateData = {
+        totalQs: 1240,
+        totalTimeMinutes: 840, // 14 hours
+        overallAccuracy: 68,
+        history: [60, 62, 65, 63, 68, 70, 72, 68, 74, 75],
+        subjects: {
+            'Polity': { qs: 300, acc: 85, color: 'orange', icon: 'fa-landmark' },
+            'History': { qs: 250, acc: 60, color: 'yellow', icon: 'fa-feather-pointed' },
+            'Geography': { qs: 150, acc: 55, color: 'blue', icon: 'fa-earth-americas' },
+            'Economy': { qs: 200, acc: 35, color: 'green', icon: 'fa-indian-rupee-sign' }, // Weakness demo
+            'Science': { qs: 100, acc: 30, color: 'purple', icon: 'fa-microchip' }, // Weakness demo
+            'Environment': { qs: 240, acc: 70, color: 'emerald', icon: 'fa-leaf' }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderOverallStats();
+        renderCharts();
+        renderSubjectList();
+    });
+
+    function renderOverallStats() {
+        document.getElementById('total-qs').innerText = aggregateData.totalQs.toLocaleString();
+        document.getElementById('total-accuracy').innerText = aggregateData.overallAccuracy + '%';
+        document.getElementById('study-hours').innerText = Math.round(aggregateData.totalTimeMinutes / 60) + 'h';
+
+        // Categorize SWOT
+        let strong = [], mod = [], weak = [];
+        for (const [sub, data] of Object.entries(aggregateData.subjects)) {
+            if (data.acc > 65) strong.push(sub);
+            else if (data.acc >= 40) mod.push(sub);
+            else weak.push(sub);
+        }
+
+        document.getElementById('list-strength').innerText = strong.length ? strong.join(', ') : 'None yet';
+        document.getElementById('list-moderate').innerText = mod.length ? mod.join(', ') : 'None yet';
+        document.getElementById('list-weak').innerText = weak.length ? weak.join(', ') : 'None yet';
+    }
+
+    function renderSubjectList() {
+        const container = document.getElementById('subject-list');
+        container.innerHTML = '';
+
+        // Sort subjects by accuracy (High to Low)
+        const sortedSubs = Object.entries(aggregateData.subjects).sort((a, b) => b[1].acc - a[1].acc);
+
+        sortedSubs.forEach(([name, data]) => {
+            // Updated Color Logic based on new thresholds
+            let colorClass = data.acc > 65 ? 'text-emerald-600' : (data.acc >= 40 ? 'text-amber-600' : 'text-red-500');
+            let barColor = data.acc > 65 ? 'bg-emerald-500' : (data.acc >= 40 ? 'bg-amber-500' : 'bg-red-500');
+
+            container.innerHTML += `
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div onclick="toggleSubject(this)" class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-${data.color}-50 text-${data.color}-500 flex items-center justify-center"><i class="fa-solid ${data.icon}"></i></div>
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">${name}</h4>
+                                <p class="text-[10px] text-slate-400">${data.qs} Qs Attempted</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold ${colorClass}">${data.acc}%</span>
+                            <i class="fa-solid fa-chevron-down text-slate-300 text-xs transition-transform duration-300 transform chevron"></i>
+                        </div>
+                    </div>
+                    <div class="expand-content bg-slate-50 border-t border-slate-100 px-4 text-xs text-slate-500">
+                        <div class="py-3 flex justify-between">
+                            <span>Correct: <b class="text-emerald-600">${Math.round(data.qs * (data.acc/100))}</b></span>
+                            <span>Wrong: <b class="text-red-500">${Math.round(data.qs * ((100-data.acc)/100))}</b></span>
+                        </div>
+                        <div class="pb-3">
+                            <span class="block mb-1 font-bold">Accuracy Meter</span>
+                            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                <div class="h-full ${barColor}" style="width: ${data.acc}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function toggleSubject(element) {
+        const content = element.nextElementSibling;
+        const chevron = element.querySelector('.chevron');
+        
+        if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+            chevron.style.transform = 'rotate(0deg)';
+        } else {
+            document.querySelectorAll('.expand-content').forEach(el => el.style.maxHeight = null);
+            document.querySelectorAll('.chevron').forEach(el => el.style.transform = 'rotate(0deg)');
+            content.style.maxHeight = content.scrollHeight + "px";
+            chevron.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    function renderCharts() {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10'],
+                datasets: [{
+                    label: 'Accuracy',
+                    data: aggregateData.history,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#2563eb',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { borderDash: [4, 4], color: '#f1f5f9' }, ticks: { display: false } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Plus Jakarta Sans' } } }
+                }
+            }
+        });
+    }
+
+    function goHome() { 
+        alert("Navigating to Home...");
+        // In real app: window.location.href = 'index.html'; 
+    }
+</script>
+</body>
+</html>

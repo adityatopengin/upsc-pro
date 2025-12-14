@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UPSC Pro - Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        
+        /* Option Card Styling */
+        .option-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid #f1f5f9; position: relative; }
+        .option-card:active { transform: scale(0.99); }
+        .option-card:hover { border-color: #cbd5e1; }
+        
+        /* Selection States */
+        .option-card.selected { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
+        .option-card.correct { background-color: #ecfdf5; border-color: #10b981; }
+        .option-card.wrong { background-color: #fef2f2; border-color: #ef4444; }
+        
+        /* Elimination State */
+        .option-card.eliminated { opacity: 0.5; background-color: #f8fafc; border-color: #e2e8f0; }
+        .option-card.eliminated .option-text { text-decoration: line-through; color: #94a3b8; }
+        
+        /* Timer Warning */
+        .timer-warning { color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Split View Layout (CSAT) */
+        .split-layout { display: flex; flex-direction: column; height: 100%; }
+        .split-top { height: 40%; overflow-y: auto; border-bottom: 4px solid #f1f5f9; background: #fff; padding: 1.5rem; }
+        .split-bottom { height: 60%; overflow-y: auto; padding: 1.5rem; padding-bottom: 6rem; background: #f8fafc; }
+        
+        /* Full View Layout */
+        .full-layout { height: 100%; overflow-y: auto; padding: 1.5rem; padding-bottom: 6rem; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 80px); }
+    </style>
+<!-- Shared Logic & Styles -->
+<link href="assets/css/style.css" rel="stylesheet">
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/DataManager.js"></script>
+
+</head>
+<body class="h-screen flex flex-col text-slate-800">
+
+    <!-- 1. HEADER (Sticky) -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30 flex-none shadow-sm">
+        <div class="flex items-center gap-3">
+            <button onclick="exitQuiz()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-400 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest" id="header-subject">LOADING...</h1>
+                <div class="flex items-center gap-1.5" id="timer-box">
+                    <i class="fa-regular fa-clock text-slate-400 text-xs"></i>
+                    <span class="font-mono font-bold text-lg leading-none text-slate-700" id="timer-display">00:00</span>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="submitQuiz()" class="bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-lg text-xs font-bold transition-transform active:scale-95 shadow-md flex items-center gap-2">
+            <span>Submit</span> <i class="fa-solid fa-check"></i>
+        </button>
+    </header>
+
+    <!-- Progress Line -->
+    <div class="h-1 w-full bg-slate-100 flex-none">
+        <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-300 ease-out" style="width: 0%"></div>
+    </div>
+
+    <!-- 2. MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-hidden relative bg-white" id="quiz-viewport">
+        
+        <!-- Passages will be injected here dynamically -->
+        <div id="passage-container" class="hidden split-top">
+            <div class="sticky top-0 bg-white/95 backdrop-blur py-2 mb-2 border-b border-slate-100 flex items-center gap-2 z-10">
+                <i class="fa-solid fa-book-open text-blue-500"></i>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Read Passage</span>
+            </div>
+            <p class="text-base text-slate-700 leading-relaxed font-serif" id="passage-text"></p>
+        </div>
+
+        <!-- Questions will be injected here -->
+        <div id="question-container" class="full-layout">
+            <!-- Question Stem -->
+            <div class="mb-6">
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">Q <span id="q-num">1</span></span>
+                    <button onclick="toggleBookmark()" id="btn-bookmark" class="text-slate-300 hover:text-amber-400 transition-colors p-1"><i class="fa-solid fa-star text-xl"></i></button>
+                </div>
+                
+                <!-- Image Slot -->
+                <div id="img-slot" class="hidden mb-4 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                    <img id="q-image" src="" class="w-full h-auto max-h-60 object-contain mx-auto cursor-zoom-in" onclick="openImageModal()">
+                </div>
+
+                <p class="text-lg md:text-xl font-medium text-slate-900 leading-relaxed font-serif" id="q-text">...</p>
+            </div>
+
+            <!-- Options List -->
+            <div class="space-y-3" id="options-list"></div>
+
+            <!-- Explanation (Learning Mode) -->
+            <div id="explanation-box" class="hidden mt-8 bg-emerald-50 border border-emerald-100 p-5 rounded-xl animate-fade-in relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-400"></div>
+                <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2 flex items-center gap-2"><i class="fa-solid fa-lightbulb"></i> Explanation</h4>
+                <p class="text-sm text-emerald-900 leading-relaxed opacity-90" id="exp-text"></p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 3. FOOTER CONTROLS (Replaces Global Nav for Quiz Mode) -->
+    <div class="fixed bottom-0 w-full bg-white/90 backdrop-blur border-t border-slate-200 p-3 z-40 pb-safe shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
+        <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            
+            <button onclick="toggleMap()" class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-grid-2 text-lg mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase">Map</span>
+            </button>
+
+            <div class="h-8 w-px bg-slate-200 mx-1"></div>
+
+            <button onclick="prevQ()" id="btn-prev" class="w-12 h-12 rounded-full border-2 border-slate-200 text-slate-400 flex items-center justify-center hover:border-slate-300 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 bg-white">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            
+            <button onclick="nextQ()" id="btn-next" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-12 rounded-full font-bold text-sm shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2 group">
+                <span>Next</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    
+    <!-- Question Map Modal -->
+    <div id="map-modal" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleMap()">
+        <div class="absolute bottom-0 w-full bg-white rounded-t-3xl p-6 pb-24 shadow-2xl transform transition-transform" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <div><h3 class="text-lg font-bold text-slate-900">Question Map</h3><p class="text-xs text-slate-500">Tap to jump</p></div>
+                <button onclick="toggleMap()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="grid grid-cols-5 gap-3 max-h-60 overflow-y-auto" id="map-grid"></div>
+            <div class="flex justify-center gap-4 mt-6 pt-4 border-t border-slate-100 text-[10px] font-bold uppercase text-slate-500">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-600"></span> Current</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-800"></span> Done</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-200"></span> Left</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
+        <img id="zoom-img" src="" class="max-w-full max-h-full rounded shadow-2xl">
+        <button class="absolute top-4 right-4 text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+<script>
+    // --- 1. CONFIG & DATA ---
+    let config = JSON.parse(localStorage.getItem('upsc_quiz_config')) || { 
+        mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' 
+    };
+
+    const questionData = [
+        { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
+        { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
+        { id: 103, type: 'passage', subject: 'CSAT', year: 2022, parentText: "Climate change is not just an environmental issue; it is a profound economic and social challenge. The disruption of weather patterns affects agriculture, which employs the majority of the workforce in developing nations. Therefore, climate adaptation is as crucial as mitigation.", text: "What is the central theme of the passage?", options: ["Environment vs Economy", "Importance of Mitigation", "Climate Adaptation's necessity", "Agricultural Reforms"], correct: 2, explanation: "The passage emphasizes adaptation due to agriculture impact." },
+        { id: 104, type: 'standard', subject: 'Economy', year: 2021, text: "The term 'West Texas Intermediate' is associated with:", options: ["Crude Oil", "Bullion", "Rare Earth Elements", "Uranium"], correct: 0, explanation: "WTI is a crude oil benchmark." },
+        { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
+    ];
+
+    let state = {
+        quiz: questionData, 
+        currentIdx: 0,
+        answers: {},
+        bookmarks: [],
+        eliminated: {},
+        startTime: null,
+        timerInterval: null,
+        timeSpent: {}
+    };
+
+    // --- 2. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        state.startTime = new Date();
+        startTimer();
+        loadQuestion(0);
+    });
+
+    // --- 3. RENDER ENGINE ---
+    function loadQuestion(idx) {
+        // Save state
+        localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
+
+        state.currentIdx = idx;
+        const q = state.quiz[idx];
+        
+        // Header Info
+        document.getElementById('header-subject').innerText = `${q.subject} • ${q.year}`;
+        document.getElementById('q-num').innerText = `${idx + 1}/${state.quiz.length}`;
+        document.getElementById('progress-bar').style.width = `${((idx + 1) / state.quiz.length) * 100}%`;
+
+        // Layout Switching (Standard vs Passage)
+        const passageContainer = document.getElementById('passage-container');
+        const questionContainer = document.getElementById('question-container');
+        
+        if (q.type === 'passage') {
+            passageContainer.classList.remove('hidden');
+            questionContainer.className = 'split-bottom';
+            document.getElementById('passage-text').innerText = q.parentText;
+        } else {
+            passageContainer.classList.add('hidden');
+            questionContainer.className = 'full-layout';
+        }
+
+        // Image Handling
+        const imgSlot = document.getElementById('img-slot');
+        if (q.type === 'image') {
+            imgSlot.classList.remove('hidden');
+            document.getElementById('q-image').src = q.imgUrl;
+        } else {
+            imgSlot.classList.add('hidden');
+        }
+
+        // Content
+        document.getElementById('q-text').innerText = q.text;
+        
+        // Options Render
+        const optList = document.getElementById('options-list');
+        optList.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const isSelected = state.answers[q.id] === i;
+            const isEliminated = state.eliminated[q.id]?.includes(i);
+            
+            let statusClass = "";
+            if (config.mode === 'learning' && state.answers[q.id] !== undefined) {
+                if (i === q.correct) statusClass = "correct";
+                else if (isSelected) statusClass = "wrong";
+            } else if (isSelected) {
+                statusClass = "selected";
+            }
+            if (isEliminated) statusClass += " eliminated";
+
+            optList.innerHTML += `
+                <div class="relative group">
+                    <div onclick="selectOption(${q.id}, ${i})" 
+                         class="option-card cursor-pointer p-4 rounded-xl bg-white flex items-start gap-3 ${statusClass}">
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex-none flex items-center justify-center text-xs font-bold text-slate-400 mt-0.5">${String.fromCharCode(65+i)}</div>
+                        <p class="option-text text-sm text-slate-700 leading-snug select-none flex-1 font-medium">${opt}</p>
+                    </div>
+                    <button onclick="eliminateOption(event, ${q.id}, ${i})" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-2 z-10 transition-colors">
+                        <i class="fa-regular ${isEliminated ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                    </button>
+                </div>`;
+        });
+
+        // Explanation (Learning Mode)
+        const expBox = document.getElementById('explanation-box');
+        if (config.mode === 'learning' && state.answers[q.id] !== undefined) {
+            document.getElementById('exp-text').innerText = q.explanation;
+            expBox.classList.remove('hidden');
+            // Scroll to explanation
+            setTimeout(() => expBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+        } else {
+            expBox.classList.add('hidden');
+        }
+
+        // Button States
+        document.getElementById('btn-prev').disabled = idx === 0;
+        document.getElementById('btn-next').innerHTML = idx === state.quiz.length - 1 ? 'Finish <i class="fa-solid fa-flag-checkered ml-1"></i>' : 'Next <i class="fa-solid fa-arrow-right ml-1"></i>';
+        document.getElementById('btn-bookmark').innerHTML = state.bookmarks.includes(q.id) ? '<i class="fa-solid fa-star text-amber-400 text-xl"></i>' : '<i class="fa-regular fa-star text-slate-300 text-xl"></i>';
+    }
+
+    // --- 4. INTERACTION ---
+    function selectOption(qId, optIdx) {
+        if (state.eliminated[qId]?.includes(optIdx)) return;
+        state.answers[qId] = (state.answers[qId] === optIdx) ? undefined : optIdx; // Toggle
+        loadQuestion(state.currentIdx);
+    }
+
+    function eliminateOption(e, qId, optIdx) {
+        e.stopPropagation();
+        if (!state.eliminated[qId]) state.eliminated[qId] = [];
+        const idx = state.eliminated[qId].indexOf(optIdx);
+        idx > -1 ? state.eliminated[qId].splice(idx, 1) : state.eliminated[qId].push(optIdx);
+        loadQuestion(state.currentIdx);
+    }
+
+    function toggleBookmark() {
+        const qId = state.quiz[state.currentIdx].id;
+        const idx = state.bookmarks.indexOf(qId);
+        idx > -1 ? state.bookmarks.splice(idx, 1) : state.bookmarks.push(qId);
+        loadQuestion(state.currentIdx);
+    }
+
+    function nextQ() { state.currentIdx < state.quiz.length - 1 ? loadQuestion(state.currentIdx + 1) : submitQuiz(); }
+    function prevQ() { if(state.currentIdx > 0) loadQuestion(state.currentIdx - 1); }
+
+    // --- 5. UTILS & TIMER ---
+    function startTimer() {
+        const display = document.getElementById('timer-display');
+        let elapsed = 0;
+        state.timerInterval = setInterval(() => {
+            elapsed++;
+            if (config.mode === 'test') {
+                const remaining = config.timeLimit - elapsed;
+                if (remaining <= 0) { clearInterval(state.timerInterval); alert("Time Up!"); submitQuiz(); return; }
+                if (remaining < 60) display.classList.add('timer-warning');
+                display.innerText = formatTime(remaining);
+            } else {
+                display.innerText = formatTime(elapsed);
+            }
+        }, 1000);
+    }
+
+    function formatTime(sec) {
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function toggleMap() {
+        const modal = document.getElementById('map-modal');
+        const grid = document.getElementById('map-grid');
+        if (modal.classList.contains('hidden')) {
+            grid.innerHTML = '';
+            state.quiz.forEach((q, i) => {
+                let color = "bg-slate-100 text-slate-500";
+                if (i === state.currentIdx) color = "bg-blue-600 text-white ring-2 ring-blue-300";
+                else if (state.answers[q.id] !== undefined) color = "bg-slate-800 text-white";
+                grid.innerHTML += `<button onclick="loadQuestion(${i}); toggleMap()" class="w-10 h-10 rounded-lg text-sm font-bold ${color}">${i+1}</button>`;
+            });
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function openImageModal() {
+        document.getElementById('zoom-img').src = document.getElementById('q-image').src;
+        document.getElementById('image-modal').classList.remove('hidden');
+    }
+
+    function submitQuiz() {
+        if(confirm("Submit Quiz?")) {
+            alert("Submitted! Returning to Dashboard...");
+            window.location.href = 'index.html'; 
+        }
+    }
+    
+    function exitQuiz() { 
+        if(confirm("Exit? Progress lost.")) {
+            window.location.href = 'quiz_selection.html'; 
+        }
+    }
+</script>
+</body>
+</html>
