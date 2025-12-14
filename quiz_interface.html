@@ -35,7 +35,7 @@
 </head>
 <body class="h-screen flex flex-col text-slate-800">
 
-    <!-- 1. HEADER (Sticky) -->
+    <!-- 1. HEADER -->
     <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30 flex-none shadow-sm">
         <div class="flex items-center gap-3">
             <button onclick="exitQuiz()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-400 transition-colors">
@@ -151,10 +151,7 @@
         console.warn("Config load failed, using defaults");
     }
 
-    // Fallback DataManager
-    const appData = window.appData || { saveResult: () => {} }; 
-
-    // DEMO QUESTIONS (Fallback)
+    // DEMO QUESTIONS (Fallback Data)
     const demoQuestions = [
         { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
         { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
@@ -163,6 +160,7 @@
         { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
     ];
 
+    // SINGLE STATE DECLARATION (Fixed: No duplicate)
     let state = {
         quiz: [], 
         currentIdx: 0,
@@ -178,42 +176,39 @@
     // --- 2. INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            // 1. Build Filename
             const filename = config.subject ? config.subject.toLowerCase().replace(/\s+/g, '_') + '.json' : 'demo.json';
-            
             let loadedQuestions = [];
 
-            // 2. Fetch or Fallback
+            // Attempt Fetch
             if (window.appData && window.appData.fetchQuestions) {
                 loadedQuestions = await window.appData.fetchQuestions(filename);
             }
 
-            // 3. Robust Fallback: If fetch failed OR returned empty, use Demo
+            // CRITICAL FALLBACK: If fetch returns nothing, use Demo
             if (!loadedQuestions || loadedQuestions.length === 0) {
-                console.log("Using DEMO questions (Fallback active)");
+                console.log("⚠️ JSON Missing. Switching to Demo Questions.");
                 loadedQuestions = demoQuestions;
             }
 
-            // 4. Load Data
+            // Slice & Load
             state.quiz = loadedQuestions.slice(0, config.count || 5);
             
-            // 5. Start Quiz
             if (state.quiz.length > 0) {
                 state.startTime = Date.now();
                 state.lastActiveTime = Date.now();
                 startTimer();
                 loadQuestion(0);
             } else {
-                document.getElementById('header-subject').innerText = "ERROR: NO DATA";
+                alert("Critical Error: No questions available.");
             }
             
-            // Auto-save
+            // Auto-save progress
             setInterval(() => {
                 localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
             }, 10000);
 
         } catch (err) {
-            console.error("Critical Init Error:", err);
+            console.error("Initialization Crash:", err);
             // Emergency Recovery
             state.quiz = demoQuestions;
             startTimer();
@@ -223,7 +218,7 @@
 
     // --- 3. RENDER ENGINE ---
     function loadQuestion(idx) {
-        if (!state.quiz[idx]) return; // Safety check
+        if (!state.quiz[idx]) return; 
 
         // Track time
         const now = Date.now();
