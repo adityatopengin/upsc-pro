@@ -253,8 +253,13 @@
     
     document.addEventListener('DOMContentLoaded', () => {
         // In a real flow, we would read the result saved by the previous page
-        // const saved = localStorage.getItem('upsc_last_result');
-        // if (saved) currentData = JSON.parse(saved);
+        const saved = localStorage.getItem('upsc_last_result');
+if (saved) {
+    currentData = JSON.parse(saved);
+    console.log("✅ Loaded REAL quiz results:", currentData);
+} else {
+    console.warn("⚠️ No recent quiz found, using demo data");
+}
         
         // Ensure structure is valid
         if (!currentData.quiz) currentData.quiz = []; 
