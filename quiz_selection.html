@@ -222,7 +222,7 @@
         <i class="fa-solid fa-house text-lg mb-1"></i>
         <span class="text-[10px] font-bold">Home</span>
     </button>
-    <button onclick="window.location.href='quiz_selection.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+    <button onclick="window.location.href='quiz_selection.html'" class="text-blue-600 flex flex-col items-center w-16 active:scale-95 transition-transform">
         <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
         <span class="text-[10px] font-bold">Quiz</span>
     </button>
@@ -399,12 +399,10 @@
         window.location.href = 'quiz_interface.html';
     }
 
-    
-
     function goHome() { 
-        alert("Navigating to Home...");
-        // In integrated app: window.location.href = 'index.html';
+        window.location.href = 'index.html';
     }
 </script>
 </body>
 </html>
+
