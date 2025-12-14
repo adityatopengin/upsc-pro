@@ -375,13 +375,90 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('zoom-img').src = document.getElementById('q-image').src;
         document.getElementById('image-modal').classList.remove('hidden');
     }
-
-    function submitQuiz() {
-        if(confirm("Submit Quiz?")) {
-            //alert("Submitted! Returning to Dashboard...");
-            window.location.href = 'analysis.html'; 
+    // --- SCORING ENGINE ---
+function calculateScore() {
+    let correct = 0, wrong = 0, skipped = 0;
+    state.quiz.forEach(q => {
+        const userAnswer = state.answers[q.id];
+        if (userAnswer === undefined) {
+            skipped++;
+        } else if (userAnswer === q.correct) {
+            correct++;
+        } else {
+            wrong++;
         }
+    });
+    
+    return {
+        correct,
+        wrong,
+        skipped,
+        score: correct * 2,  // +2 marks per correct answer
+        totalMarks: state.quiz.length * 2
+    };
+}
+
+function getMistakes() {
+    return state.quiz
+        .filter(q => {
+            const userAnswer = state.answers[q.id];
+            return userAnswer !== undefined && userAnswer !== q.correct;
+        })
+        .map(q => ({ 
+            id: q.id, 
+            subject: q.subject, 
+            text: q.text.substring(0, 50) + '...' 
+        }));
+}
+     async function submitQuiz() {
+    const results = calculateScore();
+    
+    if(confirm(`Submit Quiz?
+
+✅ Correct: ${results.correct}
+❌ Wrong: ${results.wrong}
+⏭️ Skipped: ${results.skipped}
+
+Score: ${results.score}/${results.totalMarks}`)) {
+        
+        // Save via DataManager
+        try {
+            await appData.saveResult({
+                score: results.score,
+                totalMarks: results.totalMarks,
+                correct: results.correct,
+                wrong: results.wrong,
+                skipped: results.skipped,
+                subject: config.subject || 'Demo Quiz',
+                topic: config.topic || 'Mixed',
+                questionsAttempted: state.quiz.length,
+                timeSpent: formatTime(Math.floor((new Date() - state.startTime) / 1000)),
+                mistakes: getMistakes(),
+                timestamp: new Date().toISOString()
+            });
+            console.log("✅ Quiz results saved to DataManager!");
+        } catch (error) {
+            console.warn("DataManager save failed, continuing offline:", error);
+        }
+        
+        // Also save for analysis.html (legacy compatibility)
+        const resultData = {
+            score: results.score,
+            totalMarks: results.totalMarks,
+            quiz: state.quiz.map(q => ({
+                ...q,
+                userSel: state.answers[q.id]
+            })),
+            timeSpent: {}
+        };
+        localStorage.setItem('upsc_last_result', JSON.stringify(resultData));
+        
+        // Clear timer
+        if (state.timerInterval) clearInterval(state.timerInterval);
+        
+        window.location.href = 'analysis.html';
     }
+     }
     
     function exitQuiz() { 
         if(confirm("Exit? Progress lost.")) {
