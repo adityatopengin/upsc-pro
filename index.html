@@ -7,57 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        
-        /* Glassmorphism */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-        }
-
-        /* Animations */
-        @keyframes flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .progress-fill-gs1 {
-            background: linear-gradient(270deg, #3b82f6, #60a5fa, #3b82f6);
-            background-size: 200% 200%;
-            animation: flow 3s ease infinite;
-            transition: width 0.5s ease-out;
-        }
-        .progress-fill-csat {
-            background: linear-gradient(270deg, #f59e0b, #fbbf24, #f59e0b);
-            background-size: 200% 200%;
-            animation: flow 3s ease infinite;
-            transition: width 0.5s ease-out;
-        }
-
-        /* Tab States */
-        .tab-active { 
-            border-bottom: 3px solid #3b82f6; 
-            color: #1e293b; 
-            font-weight: 800; 
-        }
-        .tab-inactive { 
-            border-bottom: 3px solid transparent; 
-            color: #94a3b8; 
-            font-weight: 600; 
-        }
-        
-        /* Subject Card Hover */
-        .subject-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .subject-card:active { transform: scale(0.96); }
-        
-        /* Smooth Fade for Grid Items */
-        .grid-item-enter { animation: fadeUp 0.3s ease forwards; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-   <!-- Shared Logic & Styles -->
-<link href="assets/css/style.css" rel="stylesheet">
-<script src="assets/js/firebase-config.js"></script>
-<script src="assets/js/DataManager.js"></script>
-
+    <!-- Shared Logic & Styles -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/DataManager.js"></script>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
 
@@ -99,12 +52,12 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <span class="text-[10px] font-bold px-2 py-1 rounded mb-2 inline-block border transition-colors" id="phase-badge">Phase 1: Foundation</span>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight" id="syllabus-percent">12%</h2>
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight" id="syllabus-percent">0%</h2>
                         <p class="text-xs text-slate-500 font-medium mt-1" id="syllabus-label">Syllabus Covered</p>
                     </div>
                     <div class="bg-white/60 p-2.5 rounded-xl shadow-sm text-center min-w-[70px] backdrop-blur-sm">
                         <div class="text-[10px] text-slate-400 font-bold uppercase">Attempts</div>
-                        <div class="text-xl font-black text-slate-800" id="total-attempts">420</div>
+                        <div class="text-xl font-black text-slate-800" id="total-attempts">0</div>
                     </div>
                 </div>
 
@@ -112,10 +65,10 @@
                 <div class="mt-4">
                     <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
                         <span>Progress</span>
-                        <span id="progress-fraction">120 / 1000 Qs</span>
+                        <span id="progress-fraction">0 / 1000 Qs</span>
                     </div>
                     <div class="h-3 w-full bg-slate-100/80 rounded-full overflow-hidden border border-slate-200">
-                        <div id="main-progress-bar" class="h-full progress-fill-gs1 rounded-full flex items-center justify-end pr-1" style="width: 12%"></div>
+                        <div id="main-progress-bar" class="h-full progress-fill-gs1 rounded-full flex items-center justify-end pr-1" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -251,33 +204,50 @@
     </div>
 
     <!-- BOTTOM NAV -->
-    <!-- BOTTOM NAV - COPY THIS INTO ALL FILES -->
-<nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
-    <button onclick="window.location.href='index.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-house text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Home</span>
-    </button>
-    <button onclick="window.location.href='quiz_selection.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Quiz</span>
-    </button>
-    <button onclick="window.location.href='stats.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Stats</span>
-    </button>
-    <button onclick="window.location.href='settings.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-gear text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Settings</span>
-    </button>
-</nav>
-
+    <nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
+        <button onclick="window.location.href='index.html'" class="text-blue-600 flex flex-col items-center w-16 active:scale-95 transition-transform">
+            <i class="fa-solid fa-house text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button onclick="window.location.href='quiz_selection.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+            <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Quiz</span>
+        </button>
+        <button onclick="window.location.href='stats.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+            <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Stats</span>
+        </button>
+        <button onclick="window.location.href='settings.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+            <i class="fa-solid fa-gear text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Settings</span>
+        </button>
+    </nav>
 
 <script>
     // --- TAB SWITCHING LOGIC ---
-    const progressData = {
-        'gs1': { percent: '12%', fraction: '120 / 1000 Qs', badge: 'Phase 1: Foundation', attempts: 420, color: 'progress-fill-gs1', badgeColor: 'border-blue-200 bg-blue-50 text-blue-700' },
-        'csat': { percent: '45%', fraction: '225 / 500 Qs', badge: 'Phase 2: Core', attempts: 180, color: 'progress-fill-csat', badgeColor: 'border-amber-200 bg-amber-50 text-amber-700' }
+    // (We will update this dynamically based on real data)
+    let progressData = {
+        'gs1': { percent: '0%', fraction: '0 / 1000 Qs', badge: 'Phase 1: Foundation', attempts: 0, color: 'progress-fill-gs1', badgeColor: 'border-blue-200 bg-blue-50 text-blue-700' },
+        'csat': { percent: '0%', fraction: '0 / 500 Qs', badge: 'Phase 2: Core', attempts: 0, color: 'progress-fill-csat', badgeColor: 'border-amber-200 bg-amber-50 text-amber-700' }
     };
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', async () => {
+        // --- NEW: FETCH REAL STATS FROM BRAIN ---
+        if (window.appData && window.appData.getStats) {
+            const stats = await window.appData.getStats();
+            
+            // Update the UI Data Object
+            progressData.gs1.attempts = stats.totalQuestions || 0;
+            // Simple logic: assume 1% progress for every 10 questions for now
+            const progress = Math.min(100, Math.round((stats.totalQuestions / 1000) * 100));
+            progressData.gs1.percent = progress + '%';
+            progressData.gs1.fraction = `${stats.totalQuestions} / 1000 Qs`;
+        }
+        
+        // Render initial view
+        switchProgressTab('gs1');
+    });
 
     function switchProgressTab(tab) {
         // 1. Update Buttons - Force Toggle Logic
@@ -311,26 +281,32 @@
                 setTimeout(() => card.classList.remove('grid-item-enter'), 300);
             }
         });
-        
-        // Auto-save this preference
-        triggerAutoSave();
     }
 
     // --- INTERACTION ---
     function startSubject(subject) {
-        // Auto-save progress before leaving
-        triggerAutoSave();
-        // Use custom modal or toast instead of alert for better UI in immersive
+        // 1. Show UI Feedback
         const indicator = document.getElementById('auto-save-indicator');
         indicator.innerHTML = `<i class="fa-solid fa-play text-blue-500 text-xs"></i><span class="text-[10px] font-bold text-blue-600">Starting ${subject}...</span>`;
         indicator.classList.remove('opacity-0');
+        
+        // 2. Save Preference for next page
+        // We assume GS1 for now unless it's a specific CSAT subject
+        const paper = subject === 'Maths' || subject === 'Reasoning' ? 'csat' : 'gs1';
+        
+        const config = {
+            mode: 'test',
+            paper: paper,
+            subject: subject,
+            topic: 'All Topics',
+            count: 10 // Default
+        };
+        localStorage.setItem('upsc_quiz_config', JSON.stringify(config));
+
+        // 3. Redirect after short delay
         setTimeout(() => {
-             indicator.classList.add('opacity-0');
-             // Reset back to saved state after message
-             setTimeout(() => {
-                indicator.innerHTML = `<i class="fa-solid fa-check-circle text-emerald-500 text-xs"></i><span class="text-[10px] font-bold text-emerald-600">Saved</span>`;
-             }, 500);
-        }, 2000);
+             window.location.href = 'quiz_selection.html';
+        }, 800);
     }
 
     // --- AUTH & AUTO-SAVE LOGIC ---
@@ -352,27 +328,20 @@
 
     function simulateLogin() {
         closeAuthModal();
-        // Update user state
         document.getElementById('user-name').innerText = "Officer";
-        
-        // Trigger first auto-save
         triggerAutoSave();
     }
 
     function triggerAutoSave() {
         const indicator = document.getElementById('auto-save-indicator');
-        
-        // 1. Show "Saving..." state (simulated)
         indicator.classList.remove('opacity-0');
-        
-        // 2. Hide after 2 seconds
         setTimeout(() => {
             indicator.classList.add('opacity-0');
         }, 2000);
-        
-        // In real app, here you would call firebase.database().ref(...).set(...)
         console.log("Auto-saved progress to cloud.");
     }
 </script>
 </body>
 </html>
+
+
