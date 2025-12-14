@@ -25,11 +25,10 @@
         .animate-enter { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-<!-- Shared Logic & Styles -->
-<link href="assets/css/style.css" rel="stylesheet">
-<script src="assets/js/firebase-config.js"></script>
-<script src="assets/js/DataManager.js"></script>
-
+    <!-- Shared Logic & Styles -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/DataManager.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
 
@@ -57,8 +56,9 @@
                     <div>
                         <h2 class="text-lg font-bold text-slate-900 leading-tight">Officer Aspirant</h2>
                         <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Level 4: Probationer</p>
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100">
-                            <i class="fa-solid fa-check-circle"></i> Synced just now
+                        <!-- Dynamic Status -->
+                        <span id="sync-status" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">
+                            <i class="fa-solid fa-cloud"></i> Offline Mode
                         </span>
                     </div>
                 </div>
@@ -91,23 +91,11 @@
                     </label>
                 </div>
 
-                <!-- Sound Effects -->
+                <!-- Sound Effects (Visual Only for now) -->
                 <div class="p-4 flex items-center justify-between border-b border-slate-100 setting-item">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-volume-high"></i></div>
                         <span class="text-sm font-medium text-slate-700">Sound Effects</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
-                <!-- Haptic Feedback -->
-                <div class="p-4 flex items-center justify-between border-b border-slate-100 setting-item">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-mobile-screen-button"></i></div>
-                        <span class="text-sm font-medium text-slate-700">Haptic Feedback</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" checked class="sr-only peer">
@@ -140,18 +128,18 @@
                 <div class="p-4 border-b border-slate-100">
                     <div class="flex justify-between items-center mb-3">
                         <span class="text-sm font-bold text-slate-700">Loaded Question Banks</span>
-                        <span class="text-xs text-slate-400">1 File</span>
+                        <span class="text-xs text-slate-400" id="file-count">Checking...</span>
                     </div>
                     <!-- List Item -->
                     <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-file-code text-blue-500"></i>
                             <div>
-                                <p class="text-xs font-bold text-slate-800">polity.json</p>
-                                <p class="text-[10px] text-slate-400">25KB • 5 Qs</p>
+                                <p class="text-xs font-bold text-slate-800" id="file-name">Local Questions</p>
+                                <p class="text-[10px] text-slate-400">Ready</p>
                             </div>
                         </div>
-                        <button class="text-slate-300 hover:text-red-500 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
+                        <button class="text-slate-300 cursor-not-allowed p-2"><i class="fa-solid fa-lock"></i></button>
                     </div>
                 </div>
 
@@ -183,94 +171,141 @@
     </main>
 
     <!-- BOTTOM NAV -->
-     <!-- BOTTOM NAV - COPY THIS INTO ALL FILES -->
-<nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
-    <button onclick="window.location.href='index.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-house text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Home</span>
-    </button>
-    <button onclick="window.location.href='quiz_selection.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Quiz</span>
-    </button>
-    <button onclick="window.location.href='stats.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Stats</span>
-    </button>
-    <button onclick="window.location.href='settings.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
-        <i class="fa-solid fa-gear text-lg mb-1"></i>
-        <span class="text-[10px] font-bold">Settings</span>
-    </button>
-</nav>
-
+    <nav class="bg-white border-t border-slate-200 h-16 flex items-center justify-around fixed bottom-0 w-full z-20">
+        <button onclick="window.location.href='index.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+            <i class="fa-solid fa-house text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button onclick="window.location.href='quiz_selection.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+            <i class="fa-solid fa-pen-nib text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Quiz</span>
+        </button>
+        <button onclick="window.location.href='stats.html'" class="text-slate-400 flex flex-col items-center w-16 active:scale-95 transition-transform hover:text-blue-600">
+            <i class="fa-solid fa-chart-pie text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Stats</span>
+        </button>
+        <button onclick="window.location.href='settings.html'" class="text-blue-600 flex flex-col items-center w-16 active:scale-95 transition-transform">
+            <i class="fa-solid fa-gear text-lg mb-1"></i>
+            <span class="text-[10px] font-bold">Settings</span>
+        </button>
+    </nav>
 
 <script>
-    // --- MOCK LOGIC FOR UI ---
+    // --- REAL IMPLEMENTATION LOGIC ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Toggle State
+        const isDark = localStorage.getItem('upsc_theme') === 'dark';
+        document.getElementById('dark-toggle').checked = isDark;
+        if(isDark) document.body.classList.add('dark-mode'); // Needs CSS support later, but logic saves here.
+
+        // Check Online/Cloud Status
+        if (typeof auth !== 'undefined' && auth.currentUser) {
+            document.getElementById('sync-status').innerHTML = '<i class="fa-solid fa-cloud text-blue-500"></i> Cloud Active';
+            document.getElementById('sync-status').classList.replace('text-slate-500', 'text-blue-600');
+        }
+        
+        // Update File Count
+        document.getElementById('file-count').innerText = "1 Found"; // Placeholder for logic that checks /data
+    });
     
     function goHome() {
-        alert("Navigating to Home...");
-        // In a real multi-page app, this would be: window.location.href = 'index.html'; 
+        window.location.href = 'index.html'; 
     }
 
-    function triggerSync() {
+    async function triggerSync() {
         const btn = event.currentTarget;
         const originalContent = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Syncing...';
         btn.disabled = true;
         
-        setTimeout(() => {
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
-            btn.classList.replace('bg-blue-600', 'bg-emerald-500');
+        // Check for Brain
+        if (window.appData && window.appData.syncLocalToCloud) {
+            // Attempt Sync
+            window.appData.syncLocalToCloud(); // Fire and forget for now
+            
+            // Visual Feedback
             setTimeout(() => {
-                btn.innerHTML = originalContent;
-                btn.classList.replace('bg-emerald-500', 'bg-blue-600');
-                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+                btn.classList.replace('bg-blue-600', 'bg-emerald-500');
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.replace('bg-emerald-500', 'bg-blue-600');
+                    btn.disabled = false;
+                }, 1000);
             }, 1000);
-        }, 1500);
+        } else {
+            alert("Engine not loaded or Offline Mode active.");
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
     }
 
     function logout() {
-        if(confirm("Log out of your account?")) {
-            alert("Logged Out");
+        if (typeof auth !== 'undefined' && auth.currentUser) {
+            if(confirm("Log out of Cloud Account? Local data will remain.")) {
+                auth.signOut().then(() => {
+                    alert("Logged Out.");
+                    location.reload();
+                });
+            }
+        } else {
+            alert("You are currently in Local (Offline) Mode. No account to log out from.");
         }
     }
 
     function toggleDark(el) {
         if(el.checked) {
-            document.body.classList.add('bg-slate-900', 'text-white'); // Simple simulation
-            alert("Dark Mode Enabled (Preview)");
+            localStorage.setItem('upsc_theme', 'dark');
+            alert("Dark Mode preference saved. (Requires CSS update to see full effect)");
         } else {
-            document.body.classList.remove('bg-slate-900', 'text-white');
+            localStorage.setItem('upsc_theme', 'light');
         }
     }
 
     function setFont(size) {
-        alert(`Font Size set to: ${size.toUpperCase()}`);
+        localStorage.setItem('upsc_font_size', size);
+        alert(`Font Size set to: ${size.toUpperCase()}. Reload to apply.`);
     }
 
     function exportData() {
-        const data = { history: [], mistakes: [] }; // Mock data
-        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        // Real Data Export
+        const history = JSON.parse(localStorage.getItem('upsc_history') || '[]');
+        const mistakes = JSON.parse(localStorage.getItem('upsc_mistakes') || '[]');
+        
+        const data = { 
+            exportDate: new Date().toISOString(),
+            history: history, 
+            mistakes: mistakes 
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "upsc_pro_backup.json";
+        a.download = `upsc_pro_backup_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     }
 
     function clearHistory() {
-        if(confirm("Delete all quiz attempts history? This cannot be undone.")) {
-            alert("History Cleared");
+        if(confirm("⚠ PERMANENTLY DELETE all quiz history and progress?\nThis cannot be undone.")) {
+            localStorage.removeItem('upsc_history');
+            localStorage.removeItem('upsc_mistakes');
+            localStorage.removeItem('upsc_last_result');
+            alert("History Cleared. App will reload.");
+            window.location.href = 'index.html';
         }
     }
 
     function factoryReset() {
-        if(confirm("WARNING: This will wipe ALL data, settings, and downloaded questions. Continue?")) {
+        const msg = "⚠ FACTORY RESET\n\nThis will wipe ALL data, including:\n- Quiz History\n- Saved Mistakes\n- Theme/Settings\n\nAre you sure?";
+        if(confirm(msg)) {
             localStorage.clear();
-            alert("App Reset. Reloading...");
-            location.reload();
+            alert("App Reset Complete. Reloading...");
+            window.location.href = 'index.html';
         }
     }
 </script>
 </body>
 </html>
+
