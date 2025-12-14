@@ -87,9 +87,7 @@ class DataManager {
      */
     async getStats() {
         if (this.mode === 'cloud') {
-            // In a real app, you might fetch this from Firestore
-            // For now, we fallback to local calculation for speed, 
-            // or return a promise fetching from db
+            // Future: Fetch from Firestore if needed
         }
         
         // Calculate from Local Storage
