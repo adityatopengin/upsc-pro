@@ -108,15 +108,22 @@
                 </div>
                 
                 <!-- Feedback Button -->
-                <div class="flex-none flex flex-col items-center justify-center pl-2 sm:pl-4 border-l border-slate-100 h-full w-full sm:w-auto">
-                    <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-2xl mb-2 shadow-inner">
-                        <i class="fa-solid fa-medal text-blue-500"></i>
-                    </div>
-                    <button onclick="playFeedback()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-md whitespace-nowrap">
-                        <i class="fa-solid fa-volume-high"></i> Feedback
-                    </button>
-                </div>
-            </div>
+                <!-- Dynamic Feedback Section -->
+<div class="flex-none flex flex-col items-center justify-center pl-2 sm:pl-4 border-l border-slate-100 h-full w-full sm:w-auto">
+    <!-- Image (Click to Open) -->
+    <div class="relative group cursor-zoom-in" onclick="openFeedbackModal()">
+        <img id="feedback-img-small" src="assets/images/feedback-mid.png" class="w-16 h-16 rounded-full object-cover mb-2 border-2 border-slate-100 shadow-md group-hover:scale-105 transition-transform">
+        <div class="absolute inset-0 bg-black/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
+            <i class="fa-solid fa-expand"></i>
+        </div>
+    </div>
+    
+    <!-- Audio Button -->
+    <button onclick="playFeedback()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-md whitespace-nowrap">
+        <i class="fa-solid fa-volume-high"></i> Feedback
+    </button>
+</div>
+
 
             <!-- Subject Performance (Simple - No Comparison) -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -214,6 +221,18 @@
             </div>
         </div>
     </div>
+<!-- FEEDBACK IMAGE POPUP MODAL -->
+<div id="feedback-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-enter" onclick="closeFeedbackModal()">
+    <div class="relative max-w-lg w-full" onclick="event.stopPropagation()">
+        <!-- Close Button -->
+        <button onclick="closeFeedbackModal()" class="absolute -top-12 right-0 text-white text-xl w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <!-- Large Image -->
+        <img id="feedback-img-large" src="" class="w-full rounded-2xl shadow-2xl border border-white/20">
+        <p class="text-center text-white/70 text-xs mt-4 font-bold uppercase tracking-widest">Tap background to close</p>
+    </div>
+</div>
 
 <script>
     // --- MOCK DATA FOR TESTING (Used if no quiz taken recently) ---
@@ -278,6 +297,7 @@
         renderAccuracyChart(correct, wrong, skipped);
         renderSubjectChart(subjectStats);
         renderReviewList('all');
+        setupFeedback(accuracy);
     }
 
     function saveMistakesAutomatically() {
@@ -389,19 +409,77 @@
     function openZoomModal() {
         document.getElementById('zoom-modal').classList.remove('hidden');
     }
+          // --- START OF NEW FEEDBACK LOGIC ---
+    
+    // Variable to hold the correct audio file path
+    let currentAudioFile = '';
 
-    function playFeedback() {
-        const score = parseFloat(document.getElementById('final-score').innerText);
-        const msg = score > 5 ? "Excellent work! Keep it up." : "Don't give up. Review your mistakes.";
-        const utterance = new SpeechSynthesisUtterance(msg);
-        utterance.rate = 1;
-        window.speechSynthesis.speak(utterance);
-        // Simple UI feedback
-        const btn = event.currentTarget;
-        const original = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-volume-high animate-pulse"></i> Playing...';
-        setTimeout(() => btn.innerHTML = original, 2000);
+    // Function 1: Decide which Image/Audio to use based on score
+    function setupFeedback(accuracy) {
+        let tier = 'mid'; // Default to middle tier
+
+        // Logic: Check score percentage
+        if (accuracy < 25) {
+            tier = 'low';   // Score is below 25%
+        } else if (accuracy > 45) {
+            tier = 'high';  // Score is above 45%
+        }
+        // Otherwise it stays 'mid' (25% - 45%)
+
+        // 1. Set the Image Source (Small Icon + Large Popup)
+        const imgPath = `assets/images/feedback-${tier}.png`;
+        
+        // Use try-catch or safe setting to prevent errors if elements don't exist yet
+        const smallImg = document.getElementById('feedback-img-small');
+        const largeImg = document.getElementById('feedback-img-large');
+        
+        if(smallImg) smallImg.src = imgPath;
+        if(largeImg) largeImg.src = imgPath;
+
+        // 2. Set the Audio File path
+        currentAudioFile = `assets/audio/feedback-${tier}.mp3`;
     }
+
+    // Function 2: Play the audio when button is clicked
+    function playFeedback() {
+        if (!currentAudioFile) {
+            console.log("Audio file not set yet");
+            return;
+        }
+
+        const audio = new Audio(currentAudioFile);
+        audio.play().catch(e => console.error("Audio play failed:", e));
+
+        // Visual animation for the button
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        
+        // Change button look to show it's playing
+        btn.innerHTML = '<i class="fa-solid fa-volume-high animate-pulse"></i> Playing...';
+        btn.classList.remove('bg-slate-900');
+        btn.classList.add('bg-blue-600');
+        
+        // Reset button after 4 seconds
+        setTimeout(() => {
+            btn.innerHTML = originalContent;
+            btn.classList.remove('bg-blue-600');
+            btn.classList.add('bg-slate-900');
+        }, 4000);
+    }
+
+    // Function 3: Open the big image
+    function openFeedbackModal() {
+        document.getElementById('feedback-modal').classList.remove('hidden');
+    }
+
+    // Function 4: Close the big image
+    function closeFeedbackModal() {
+        document.getElementById('feedback-modal').classList.add('hidden');
+    }
+    
+    // --- END OF NEW FEEDBACK LOGIC ---
+
+    
 
     function goHome() { 
         alert("Navigating to Home...");
