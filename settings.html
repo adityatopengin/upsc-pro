@@ -50,9 +50,11 @@
                 <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-8 -mt-8"></div>
                 
                 <div class="flex items-center gap-4 relative z-10 mb-6">
-                    <div class="w-16 h-16 rounded-full bg-slate-100 p-1 shadow-sm border border-slate-200 overflow-hidden">
-                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Officer" alt="Avatar" class="w-full h-full bg-white object-cover">
-                    </div>
+                     <!-- Clickable Profile Image -->
+                <div class="w-16 h-16 rounded-full bg-slate-100 p-1 shadow-sm border border-slate-200 overflow-hidden cursor-pointer active:scale-95 transition-transform" onclick="openProfileModal()">
+               <img src="assets/images/Omg.jpg" alt="Profile" class="w-full h-full object-cover">
+                  </div>
+
                     <div>
                         <h2 class="text-lg font-bold text-slate-900 leading-tight">Officer Aspirant</h2>
                         <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Level 4: Probationer</p>
@@ -189,6 +191,18 @@
             <span class="text-[10px] font-bold">Settings</span>
         </button>
     </nav>
+<!-- PROFILE POPUP MODAL -->
+<div id="profile-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-enter" onclick="closeProfileModal()">
+    <div class="relative max-w-lg w-full" onclick="event.stopPropagation()">
+        <!-- Close Button -->
+        <button onclick="closeProfileModal()" class="absolute -top-12 right-0 text-white text-xl w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <!-- Large Image -->
+        <img src="assets/images/Omg.jpg" class="w-full rounded-2xl shadow-2xl border border-white/20">
+        <p class="text-center text-white/70 text-xs mt-4 font-bold uppercase tracking-widest">Tap background to close</p>
+    </div>
+</div>
 
 <script>
     // --- REAL IMPLEMENTATION LOGIC ---
@@ -239,6 +253,14 @@
             btn.innerHTML = originalContent;
             btn.disabled = false;
         }
+    }
+         // --- PROFILE MODAL LOGIC ---
+    function openProfileModal() {
+        document.getElementById('profile-modal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profile-modal').classList.add('hidden');
     }
 
     function logout() {
