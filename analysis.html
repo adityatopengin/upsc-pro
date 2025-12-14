@@ -109,21 +109,21 @@
                 
                 <!-- Feedback Button -->
                 <!-- Dynamic Feedback Section -->
-<div class="flex-none flex flex-col items-center justify-center pl-2 sm:pl-4 border-l border-slate-100 h-full w-full sm:w-auto">
-    <!-- Image (Click to Open) -->
-    <div class="relative group cursor-zoom-in" onclick="openFeedbackModal()">
-        <img id="feedback-img-small" src="assets/images/feedback-mid.png" class="w-16 h-16 rounded-full object-cover mb-2 border-2 border-slate-100 shadow-md group-hover:scale-105 transition-transform">
-        <div class="absolute inset-0 bg-black/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
-            <i class="fa-solid fa-expand"></i>
-        </div>
-    </div>
-    
-    <!-- Audio Button -->
-    <button onclick="playFeedback()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-md whitespace-nowrap">
-        <i class="fa-solid fa-volume-high"></i> Feedback
-    </button>
-</div>
-
+                <div class="flex-none flex flex-col items-center justify-center pl-2 sm:pl-4 border-l border-slate-100 h-full w-full sm:w-auto">
+                    <!-- Image (Click to Open) -->
+                    <div class="relative group cursor-zoom-in" onclick="openFeedbackModal()">
+                        <img id="feedback-img-small" src="assets/images/feedback-mid.png" class="w-16 h-16 rounded-full object-cover mb-2 border-2 border-slate-100 shadow-md group-hover:scale-105 transition-transform">
+                        <div class="absolute inset-0 bg-black/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
+                            <i class="fa-solid fa-expand"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Button -->
+                    <button onclick="playFeedback()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-full text-[10px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-md whitespace-nowrap">
+                        <i class="fa-solid fa-volume-high"></i> Feedback
+                    </button>
+                </div>
+            </div>
 
             <!-- Subject Performance (Simple - No Comparison) -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -250,16 +250,17 @@
     };
 
     let currentData = mockResult; 
+    let currentAudioFile = ''; 
     
     document.addEventListener('DOMContentLoaded', () => {
         // In a real flow, we would read the result saved by the previous page
         const saved = localStorage.getItem('upsc_last_result');
-if (saved) {
-    currentData = JSON.parse(saved);
-    console.log("✅ Loaded REAL quiz results:", currentData);
-} else {
-    console.warn("⚠️ No recent quiz found, using demo data");
-}
+        if (saved) {
+            currentData = JSON.parse(saved);
+            console.log("✅ Loaded REAL quiz results:", currentData);
+        } else {
+            console.warn("⚠️ No recent quiz found, using demo data");
+        }
         
         // Ensure structure is valid
         if (!currentData.quiz) currentData.quiz = []; 
@@ -303,6 +304,17 @@ if (saved) {
         renderSubjectChart(subjectStats);
         renderReviewList('all');
         setupFeedback(accuracy);
+
+        // --- NEW: Save Result to Permanent History (Brain Connection) ---
+        if (window.appData && window.appData.saveResult) {
+            window.appData.saveResult({
+                score: currentData.score,
+                total: currentData.quiz.length,
+                accuracy: accuracy,
+                timeSpent: totalTimeSeconds,
+                timestamp: new Date().toISOString()
+            }).then(() => console.log("Result saved to History!"));
+        }
     }
 
     function saveMistakesAutomatically() {
@@ -416,9 +428,6 @@ if (saved) {
     }
           // --- START OF NEW FEEDBACK LOGIC ---
     
-    // Variable to hold the correct audio file path
-    let currentAudioFile = '';
-
     // Function 1: Decide which Image/Audio to use based on score
     function setupFeedback(accuracy) {
         let tier = 'mid'; // Default to middle tier
@@ -484,14 +493,13 @@ if (saved) {
     
     // --- END OF NEW FEEDBACK LOGIC ---
 
-    
-
     function goHome() { 
-        alert("Navigating to Home...");
-        // In real app: window.location.href = 'index.html'; 
+        window.location.href = 'index.html'; 
     }
     
     function exportReport() { alert("Generating PDF Report..."); }
 </script>
 </body>
 </html>
+
+
