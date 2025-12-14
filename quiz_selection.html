@@ -376,17 +376,28 @@
         };
         launchQuiz(config);
     }
-
+    
     function launchQuiz(config = null) {
+        // 1. If no config was passed (standard start), build it from current selection
         if (!config) {
             config = {
-                mode: state.mode, paper: state.paper, subject: state.selectedSubject.name, topic: state.selectedTopic, count: state.questionCount,
+                mode: state.mode, 
+                paper: state.paper, 
+                subject: state.selectedSubject.name, 
+                topic: state.selectedTopic, 
+                count: state.questionCount,
                 timeLimit: state.paper === 'gs1' ? state.questionCount * 1.2 * 60 : state.questionCount * 1.5 * 60
             };
         }
+
+        // 2. Save settings to memory so the next page can read them
         localStorage.setItem('upsc_quiz_config', JSON.stringify(config));
-        alert(`Starting Quiz:\nMode: ${config.mode.toUpperCase()}\nPaper: ${config.paper.toUpperCase()}\nType: ${config.subject} (${config.topic})\nQs: ${config.count}\nTime: ${config.timeLimit/60} mins`);
+
+        // 3. THE IMPORTANT PART: Go to the quiz page!
+        window.location.href = 'quiz_interface.html';
     }
+
+    
 
     function goHome() { 
         alert("Navigating to Home...");
