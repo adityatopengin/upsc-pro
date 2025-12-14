@@ -43,11 +43,10 @@
         
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 80px); }
     </style>
-<!-- Shared Logic & Styles -->
-<link href="assets/css/style.css" rel="stylesheet">
-<script src="assets/js/firebase-config.js"></script>
-<script src="assets/js/DataManager.js"></script>
-
+    <!-- Shared Logic & Styles -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/DataManager.js"></script>
 </head>
 <body class="h-screen flex flex-col text-slate-800">
 
@@ -118,7 +117,7 @@
 
     </main>
 
-    <!-- 3. FOOTER CONTROLS (Replaces Global Nav for Quiz Mode) -->
+    <!-- 3. FOOTER CONTROLS -->
     <div class="fixed bottom-0 w-full bg-white/90 backdrop-blur border-t border-slate-200 p-3 z-40 pb-safe shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
         <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
             
@@ -165,64 +164,83 @@
 
 <script>
     // --- 1. CONFIG & DATA ---
-let config = JSON.parse(localStorage.getItem('upsc_quiz_config')) || { 
-    mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' 
-};
+    let config = JSON.parse(localStorage.getItem('upsc_quiz_config')) || { 
+        mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' 
+    };
 
-// Use DataManager (your demo questions will still work)
-const appData = window.appData || { saveResult: () => {} }; // Fallback if not loaded
+    // Use DataManager (your demo questions will still work)
+    const appData = window.appData || { saveResult: () => {} }; 
 
-let state = {
-    quiz: [],  // Will be loaded dynamically
-    currentIdx: 0,
-    answers: {},
-    bookmarks: [],
-    eliminated: {},
-    startTime: null,
-    timerInterval: null,
-    timeSpent: {}
-};
+    // Your existing 5 demo questions (Backup/Fallback)
+    const demoQuestions = [
+        { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
+        { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
+        { id: 103, type: 'passage', subject: 'CSAT', year: 2022, parentText: "Climate change is not just an environmental issue; it is a profound economic and social challenge. The disruption of weather patterns affects agriculture, which employs the majority of the workforce in developing nations. Therefore, climate adaptation is as crucial as mitigation.", text: "What is the central theme of the passage?", options: ["Environment vs Economy", "Importance of Mitigation", "Climate Adaptation's necessity", "Agricultural Reforms"], correct: 2, explanation: "The passage emphasizes adaptation due to agriculture impact." },
+        { id: 104, type: 'standard', subject: 'Economy', year: 2021, text: "The term 'West Texas Intermediate' is associated with:", options: ["Crude Oil", "Bullion", "Rare Earth Elements", "Uranium"], correct: 0, explanation: "WTI is a crude oil benchmark." },
+        { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
+    ];
 
-// Your existing 5 demo questions (KEEP THESE - renamed)
-const demoQuestions = [
-    { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
-    { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
-    { id: 103, type: 'passage', subject: 'CSAT', year: 2022, parentText: "Climate change is not just an environmental issue; it is a profound economic and social challenge. The disruption of weather patterns affects agriculture, which employs the majority of the workforce in developing nations. Therefore, climate adaptation is as crucial as mitigation.", text: "What is the central theme of the passage?", options: ["Environment vs Economy", "Importance of Mitigation", "Climate Adaptation's necessity", "Agricultural Reforms"], correct: 2, explanation: "The passage emphasizes adaptation due to agriculture impact." },
-    { id: 104, type: 'standard', subject: 'Economy', year: 2021, text: "The term 'West Texas Intermediate' is associated with:", options: ["Crude Oil", "Bullion", "Rare Earth Elements", "Uranium"], correct: 0, explanation: "WTI is a crude oil benchmark." },
-    { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
-];
-
+    // Single State Declaration (FIXED: Duplicate removed)
     let state = {
-        quiz: questionData, 
+        quiz: [], 
         currentIdx: 0,
         answers: {},
         bookmarks: [],
         eliminated: {},
         startTime: null,
+        lastActiveTime: null,
         timerInterval: null,
         timeSpent: {}
     };
 
     // --- 2. INITIALIZATION ---
-    // Initialize with real data flow
-document.addEventListener('DOMContentLoaded', async () => {
-    // Load questions (demo for now, JSON later)
-    state.quiz = demoQuestions.slice(0, config.count || 5);
-    
-    state.startTime = new Date();
-    startTimer();
-    loadQuestion(0);
-    
-    // Auto-save progress every 10 seconds
-    setInterval(() => {
-        localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
-    }, 10000);
-    
-    console.log("Quiz initialized with", state.quiz.length, "questions");
-});
+    document.addEventListener('DOMContentLoaded', async () => {
+        // 1. Determine which file to load based on user selection
+        // e.g., "Indian Polity" -> "indian_polity.json"
+        const filename = config.subject ? config.subject.toLowerCase().replace(/\s+/g, '_') + '.json' : 'demo.json';
+        
+        let loadedQuestions = [];
+
+        // 2. Try fetching real data via DataManager
+        if (window.appData && window.appData.fetchQuestions) {
+            console.log("Attempting to fetch:", filename);
+            loadedQuestions = await window.appData.fetchQuestions(filename);
+        }
+
+        // 3. Fallback to Demo Data if no file found or empty
+        if (!loadedQuestions || loadedQuestions.length === 0) {
+            console.warn("Using Demo Questions (No external file found)");
+            loadedQuestions = demoQuestions;
+        }
+
+        // 4. Randomize or Slice based on count
+        // Shuffle array slightly for randomness if needed (optional)
+        // loadedQuestions.sort(() => Math.random() - 0.5);
+        state.quiz = loadedQuestions.slice(0, config.count || 5);
+        
+        // 5. Start Quiz
+        state.startTime = Date.now();
+        state.lastActiveTime = Date.now();
+        startTimer();
+        loadQuestion(0);
+        
+        // Auto-save progress
+        setInterval(() => {
+            localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
+        }, 10000);
+    });
 
     // --- 3. RENDER ENGINE ---
     function loadQuestion(idx) {
+        // Track time for previous question before switching
+        const now = Date.now();
+        if (state.lastActiveTime) {
+            const diff = Math.round((now - state.lastActiveTime) / 1000);
+            const prevQId = state.quiz[state.currentIdx].id;
+            state.timeSpent[prevQId] = (state.timeSpent[prevQId] || 0) + diff;
+        }
+        state.lastActiveTime = now;
+
         // Save state
         localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
 
@@ -230,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const q = state.quiz[idx];
         
         // Header Info
-        document.getElementById('header-subject').innerText = `${q.subject} • ${q.year}`;
+        document.getElementById('header-subject').innerText = `${q.subject} • ${q.year || 'N/A'}`;
         document.getElementById('q-num').innerText = `${idx + 1}/${state.quiz.length}`;
         document.getElementById('progress-bar').style.width = `${((idx + 1) / state.quiz.length) * 100}%`;
 
@@ -294,7 +312,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (config.mode === 'learning' && state.answers[q.id] !== undefined) {
             document.getElementById('exp-text').innerText = q.explanation;
             expBox.classList.remove('hidden');
-            // Scroll to explanation
             setTimeout(() => expBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
         } else {
             expBox.classList.add('hidden');
@@ -375,71 +392,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('zoom-img').src = document.getElementById('q-image').src;
         document.getElementById('image-modal').classList.remove('hidden');
     }
-    // --- SCORING ENGINE ---
-function calculateScore() {
-    let correct = 0, wrong = 0, skipped = 0;
-    state.quiz.forEach(q => {
-        const userAnswer = state.answers[q.id];
-        if (userAnswer === undefined) {
-            skipped++;
-        } else if (userAnswer === q.correct) {
-            correct++;
-        } else {
-            wrong++;
-        }
-    });
-    
-    return {
-        correct,
-        wrong,
-        skipped,
-        score: correct * 2,  // +2 marks per correct answer
-        totalMarks: state.quiz.length * 2
-    };
-}
 
-function getMistakes() {
-    return state.quiz
-        .filter(q => {
+    // --- SCORING ENGINE ---
+    function submitQuiz() {
+        // Update final time for current question
+        const now = Date.now();
+        if (state.lastActiveTime) {
+            const diff = Math.round((now - state.lastActiveTime) / 1000);
+            const prevQId = state.quiz[state.currentIdx].id;
+            state.timeSpent[prevQId] = (state.timeSpent[prevQId] || 0) + diff;
+        }
+
+        let correct = 0, wrong = 0, skipped = 0;
+        state.quiz.forEach(q => {
             const userAnswer = state.answers[q.id];
-            return userAnswer !== undefined && userAnswer !== q.correct;
-        })
-        .map(q => ({ 
-            id: q.id, 
-            subject: q.subject, 
-            text: q.text.substring(0, 50) + '...' 
-        }));
-}
-      function submitQuiz() {
-    // Calculate YOUR actual score
-    let correct = 0, wrong = 0, skipped = 0;
-    state.quiz.forEach(q => {
-        const userAnswer = state.answers[q.id];
-        if (userAnswer === undefined) skipped++;
-        else if (userAnswer === q.correct) correct++;
-        else wrong++;
-    });
-    
-    const message = `YOUR SCORE:
+            if (userAnswer === undefined) skipped++;
+            else if (userAnswer === q.correct) correct++;
+            else wrong++;
+        });
+        
+        const message = `YOUR SCORE:
 ✅ ${correct} Correct
 ❌ ${wrong} Wrong
 ⏭️ ${skipped} Skipped`;
-    
-    if(confirm(message)) {
-        // Save YOUR answers for analysis.html
-        const resultData = {
-            score: correct * 2,
-            totalMarks: state.quiz.length * 2,
-            quiz: state.quiz.map(q => ({
-                ...q,
-                userSel: state.answers[q.id]
-            }))
-        };
-        localStorage.setItem('upsc_last_result', JSON.stringify(resultData));
         
-        window.location.href = 'analysis.html';
+        if(confirm(message)) {
+            // Save YOUR answers for analysis.html
+            const resultData = {
+                score: correct * 2,
+                totalMarks: state.quiz.length * 2,
+                timeSpent: state.timeSpent, // Include detailed time tracking
+                quiz: state.quiz.map(q => ({
+                    ...q,
+                    userSel: state.answers[q.id]
+                }))
+            };
+            localStorage.setItem('upsc_last_result', JSON.stringify(resultData));
+            
+            window.location.href = 'analysis.html';
+        }
     }
-      }
     
     function exitQuiz() { 
         if(confirm("Exit? Progress lost.")) {
@@ -449,3 +441,5 @@ function getMistakes() {
 </script>
 </body>
 </html>
+
+
