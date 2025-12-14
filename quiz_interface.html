@@ -9,38 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
-        
-        /* Option Card Styling */
         .option-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid #f1f5f9; position: relative; }
         .option-card:active { transform: scale(0.99); }
         .option-card:hover { border-color: #cbd5e1; }
-        
-        /* Selection States */
         .option-card.selected { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
         .option-card.correct { background-color: #ecfdf5; border-color: #10b981; }
         .option-card.wrong { background-color: #fef2f2; border-color: #ef4444; }
-        
-        /* Elimination State */
         .option-card.eliminated { opacity: 0.5; background-color: #f8fafc; border-color: #e2e8f0; }
         .option-card.eliminated .option-text { text-decoration: line-through; color: #94a3b8; }
-        
-        /* Timer Warning */
         .timer-warning { color: #ef4444; animation: pulse 1s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        /* Split View Layout (CSAT) */
         .split-layout { display: flex; flex-direction: column; height: 100%; }
         .split-top { height: 40%; overflow-y: auto; border-bottom: 4px solid #f1f5f9; background: #fff; padding: 1.5rem; }
         .split-bottom { height: 60%; overflow-y: auto; padding: 1.5rem; padding-bottom: 6rem; background: #f8fafc; }
-        
-        /* Full View Layout */
         .full-layout { height: 100%; overflow-y: auto; padding: 1.5rem; padding-bottom: 6rem; }
-
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-        
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 80px); }
     </style>
     <!-- Shared Logic & Styles -->
@@ -139,8 +124,6 @@
     </div>
 
     <!-- MODALS -->
-    
-    <!-- Question Map Modal -->
     <div id="map-modal" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleMap()">
         <div class="absolute bottom-0 w-full bg-white rounded-t-3xl p-6 pb-24 shadow-2xl transform transition-transform" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-6">
@@ -148,15 +131,9 @@
                 <button onclick="toggleMap()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="grid grid-cols-5 gap-3 max-h-60 overflow-y-auto" id="map-grid"></div>
-            <div class="flex justify-center gap-4 mt-6 pt-4 border-t border-slate-100 text-[10px] font-bold uppercase text-slate-500">
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-600"></span> Current</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-800"></span> Done</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-200"></span> Left</span>
-            </div>
         </div>
     </div>
 
-    <!-- Image Zoom Modal -->
     <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
         <img id="zoom-img" src="" class="max-w-full max-h-full rounded shadow-2xl">
         <button class="absolute top-4 right-4 text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
@@ -164,14 +141,20 @@
 
 <script>
     // --- 1. CONFIG & DATA ---
-    let config = JSON.parse(localStorage.getItem('upsc_quiz_config')) || { 
-        mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' 
-    };
+    let config = { mode: 'test', count: 5, timeLimit: 300, subject: 'Demo', topic: 'Sample' };
+    
+    // Safe load of config
+    try {
+        const savedConfig = JSON.parse(localStorage.getItem('upsc_quiz_config'));
+        if(savedConfig) config = savedConfig;
+    } catch(e) {
+        console.warn("Config load failed, using defaults");
+    }
 
-    // Use DataManager (your demo questions will still work)
+    // Fallback DataManager
     const appData = window.appData || { saveResult: () => {} }; 
 
-    // Your existing 5 demo questions (Backup/Fallback)
+    // DEMO QUESTIONS (Fallback)
     const demoQuestions = [
         { id: 101, type: 'standard', subject: 'Polity', year: 2018, text: "Which Article of the Constitution of India safeguards one's right to marry the person of one's choice?", options: ["Article 19", "Article 21", "Article 25", "Article 29"], correct: 1, explanation: "In Hadiya Case (2018), SC ruled Right to Marry is part of Article 21." },
         { id: 102, type: 'image', subject: 'Art & Culture', year: 2020, text: "Identify the architectural style of the temple shown:", imgUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Brihadisvara_Temple_Thanjavur.jpg/320px-Brihadisvara_Temple_Thanjavur.jpg", options: ["Nagara", "Dravida", "Vesara", "Kalinga"], correct: 1, explanation: "Brihadeeswarar Temple is a Dravida style masterpiece." },
@@ -180,7 +163,6 @@
         { id: 105, type: 'standard', subject: 'History', year: 2019, text: "The 'Swadeshi' and 'Boycott' were adopted as methods of struggle during:", options: ["Partition of Bengal", "Home Rule Movement", "Non-Cooperation", "Simon Commission"], correct: 0, explanation: "Adopted in 1905 anti-partition movement." }
     ];
 
-    // Single State Declaration (FIXED: Duplicate removed)
     let state = {
         quiz: [], 
         currentIdx: 0,
@@ -195,71 +177,81 @@
 
     // --- 2. INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', async () => {
-        // 1. Determine which file to load based on user selection
-        // e.g., "Indian Polity" -> "indian_polity.json"
-        const filename = config.subject ? config.subject.toLowerCase().replace(/\s+/g, '_') + '.json' : 'demo.json';
-        
-        let loadedQuestions = [];
+        try {
+            // 1. Build Filename
+            const filename = config.subject ? config.subject.toLowerCase().replace(/\s+/g, '_') + '.json' : 'demo.json';
+            
+            let loadedQuestions = [];
 
-        // 2. Try fetching real data via DataManager
-        if (window.appData && window.appData.fetchQuestions) {
-            console.log("Attempting to fetch:", filename);
-            loadedQuestions = await window.appData.fetchQuestions(filename);
+            // 2. Fetch or Fallback
+            if (window.appData && window.appData.fetchQuestions) {
+                loadedQuestions = await window.appData.fetchQuestions(filename);
+            }
+
+            // 3. Robust Fallback: If fetch failed OR returned empty, use Demo
+            if (!loadedQuestions || loadedQuestions.length === 0) {
+                console.log("Using DEMO questions (Fallback active)");
+                loadedQuestions = demoQuestions;
+            }
+
+            // 4. Load Data
+            state.quiz = loadedQuestions.slice(0, config.count || 5);
+            
+            // 5. Start Quiz
+            if (state.quiz.length > 0) {
+                state.startTime = Date.now();
+                state.lastActiveTime = Date.now();
+                startTimer();
+                loadQuestion(0);
+            } else {
+                document.getElementById('header-subject').innerText = "ERROR: NO DATA";
+            }
+            
+            // Auto-save
+            setInterval(() => {
+                localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
+            }, 10000);
+
+        } catch (err) {
+            console.error("Critical Init Error:", err);
+            // Emergency Recovery
+            state.quiz = demoQuestions;
+            startTimer();
+            loadQuestion(0);
         }
-
-        // 3. Fallback to Demo Data if no file found or empty
-        if (!loadedQuestions || loadedQuestions.length === 0) {
-            console.warn("Using Demo Questions (No external file found)");
-            loadedQuestions = demoQuestions;
-        }
-
-        // 4. Randomize or Slice based on count
-        // Shuffle array slightly for randomness if needed (optional)
-        // loadedQuestions.sort(() => Math.random() - 0.5);
-        state.quiz = loadedQuestions.slice(0, config.count || 5);
-        
-        // 5. Start Quiz
-        state.startTime = Date.now();
-        state.lastActiveTime = Date.now();
-        startTimer();
-        loadQuestion(0);
-        
-        // Auto-save progress
-        setInterval(() => {
-            localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
-        }, 10000);
     });
 
     // --- 3. RENDER ENGINE ---
     function loadQuestion(idx) {
-        // Track time for previous question before switching
+        if (!state.quiz[idx]) return; // Safety check
+
+        // Track time
         const now = Date.now();
         if (state.lastActiveTime) {
             const diff = Math.round((now - state.lastActiveTime) / 1000);
-            const prevQId = state.quiz[state.currentIdx].id;
-            state.timeSpent[prevQId] = (state.timeSpent[prevQId] || 0) + diff;
+            if(state.quiz[state.currentIdx]) {
+                const prevQId = state.quiz[state.currentIdx].id;
+                state.timeSpent[prevQId] = (state.timeSpent[prevQId] || 0) + diff;
+            }
         }
         state.lastActiveTime = now;
-
-        // Save state
-        localStorage.setItem('upsc_quiz_progress', JSON.stringify(state.answers));
 
         state.currentIdx = idx;
         const q = state.quiz[idx];
         
         // Header Info
-        document.getElementById('header-subject').innerText = `${q.subject} • ${q.year || 'N/A'}`;
+        document.getElementById('header-subject').innerText = `${q.subject || 'GS'} • ${q.year || 'Model'}`;
         document.getElementById('q-num').innerText = `${idx + 1}/${state.quiz.length}`;
         document.getElementById('progress-bar').style.width = `${((idx + 1) / state.quiz.length) * 100}%`;
 
-        // Layout Switching (Standard vs Passage)
+        // Layout Switching
         const passageContainer = document.getElementById('passage-container');
         const questionContainer = document.getElementById('question-container');
         
         if (q.type === 'passage') {
             passageContainer.classList.remove('hidden');
             questionContainer.className = 'split-bottom';
-            document.getElementById('passage-text').innerText = q.parentText;
+            document.getElementById('passage-text').innerText = q.parentText || "Read the passage below.";
         } else {
             passageContainer.classList.add('hidden');
             questionContainer.className = 'full-layout';
@@ -307,7 +299,7 @@
                 </div>`;
         });
 
-        // Explanation (Learning Mode)
+        // Explanation
         const expBox = document.getElementById('explanation-box');
         if (config.mode === 'learning' && state.answers[q.id] !== undefined) {
             document.getElementById('exp-text').innerText = q.explanation;
@@ -317,7 +309,7 @@
             expBox.classList.add('hidden');
         }
 
-        // Button States
+        // Buttons
         document.getElementById('btn-prev').disabled = idx === 0;
         document.getElementById('btn-next').innerHTML = idx === state.quiz.length - 1 ? 'Finish <i class="fa-solid fa-flag-checkered ml-1"></i>' : 'Next <i class="fa-solid fa-arrow-right ml-1"></i>';
         document.getElementById('btn-bookmark').innerHTML = state.bookmarks.includes(q.id) ? '<i class="fa-solid fa-star text-amber-400 text-xl"></i>' : '<i class="fa-regular fa-star text-slate-300 text-xl"></i>';
@@ -326,7 +318,7 @@
     // --- 4. INTERACTION ---
     function selectOption(qId, optIdx) {
         if (state.eliminated[qId]?.includes(optIdx)) return;
-        state.answers[qId] = (state.answers[qId] === optIdx) ? undefined : optIdx; // Toggle
+        state.answers[qId] = (state.answers[qId] === optIdx) ? undefined : optIdx; 
         loadQuestion(state.currentIdx);
     }
 
@@ -348,14 +340,14 @@
     function nextQ() { state.currentIdx < state.quiz.length - 1 ? loadQuestion(state.currentIdx + 1) : submitQuiz(); }
     function prevQ() { if(state.currentIdx > 0) loadQuestion(state.currentIdx - 1); }
 
-    // --- 5. UTILS & TIMER ---
+    // --- 5. UTILS ---
     function startTimer() {
         const display = document.getElementById('timer-display');
         let elapsed = 0;
         state.timerInterval = setInterval(() => {
             elapsed++;
             if (config.mode === 'test') {
-                const remaining = config.timeLimit - elapsed;
+                const remaining = (config.timeLimit || 300) - elapsed;
                 if (remaining <= 0) { clearInterval(state.timerInterval); alert("Time Up!"); submitQuiz(); return; }
                 if (remaining < 60) display.classList.add('timer-warning');
                 display.innerText = formatTime(remaining);
@@ -393,16 +385,9 @@
         document.getElementById('image-modal').classList.remove('hidden');
     }
 
-    // --- SCORING ENGINE ---
     function submitQuiz() {
-        // Update final time for current question
-        const now = Date.now();
-        if (state.lastActiveTime) {
-            const diff = Math.round((now - state.lastActiveTime) / 1000);
-            const prevQId = state.quiz[state.currentIdx].id;
-            state.timeSpent[prevQId] = (state.timeSpent[prevQId] || 0) + diff;
-        }
-
+        clearInterval(state.timerInterval);
+        
         let correct = 0, wrong = 0, skipped = 0;
         state.quiz.forEach(q => {
             const userAnswer = state.answers[q.id];
@@ -411,25 +396,19 @@
             else wrong++;
         });
         
-        const message = `YOUR SCORE:
-✅ ${correct} Correct
-❌ ${wrong} Wrong
-⏭️ ${skipped} Skipped`;
+        const message = `YOUR SCORE:\n✅ ${correct} Correct\n❌ ${wrong} Wrong\n⏭️ ${skipped} Skipped`;
         
         if(confirm(message)) {
-            // Save YOUR answers for analysis.html
             const resultData = {
                 score: correct * 2,
                 totalMarks: state.quiz.length * 2,
-                timeSpent: state.timeSpent, // Include detailed time tracking
-                quiz: state.quiz.map(q => ({
-                    ...q,
-                    userSel: state.answers[q.id]
-                }))
+                timeSpent: state.timeSpent,
+                quiz: state.quiz.map(q => ({ ...q, userSel: state.answers[q.id] }))
             };
             localStorage.setItem('upsc_last_result', JSON.stringify(resultData));
-            
             window.location.href = 'analysis.html';
+        } else {
+            startTimer(); // Resume if cancelled
         }
     }
     
@@ -441,5 +420,6 @@
 </script>
 </body>
 </html>
+
 
 
